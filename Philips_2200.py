@@ -7,18 +7,20 @@ from HASS_Token import token
 import RPi.GPIO as GPIO
 import time
 
+printSerial = False
+
 class Philips_2200:
-    def __init__(self, sn_serial_main, sn_serial_disp, persistant_HASS_token):
+    def __init__(self,persistant_HASS_token, sn_serial_main=None, sn_serial_disp=None):
 
         GPIO.setmode(GPIO.BCM)  # GPIO Nummern statt Board Nummern
         self.RELAIS_PWR_DISP_GPIO = 17
         self.RELAIS_TX_RX_GPIO = 27 #RELAIS ON = MITM mode, #RELAIS Off = Normal mode
 
-        GPIO.setup(self.RELAIS_PWR_DISP_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
-        GPIO.setup(self.RELAIS_TX_RX_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
-        #GPIO.output(RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # aus
-        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # an
-        GPIO.output(self.RELAIS_TX_RX_GPIO, GPIO.HIGH)  # MITM Mode (intercept communication between mainboard and display)
+        #GPIO.setup(self.RELAIS_PWR_DISP_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
+        #GPIO.setup(self.RELAIS_TX_RX_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
+                #GPIO.output(RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # aus
+        #GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # an
+        #GPIO.output(self.RELAIS_TX_RX_GPIO, GPIO.LOW)  # MITM Mode (intercept communication between mainboard and display)
         #usb <-> serial uart device serial numbers
         #can be retrieved e.g. via shell: /bin/udevadm info --name=/dev/ttyUSB0 | grep ID_USB_SERIAL_SHORT
         self.sn_serial_main = sn_serial_main
@@ -46,7 +48,17 @@ class Philips_2200:
         self.protocolNames = {0:'Pre_0',1:'Pre_1', 3:'Espresso LED', 4:'Hot Water LED', 5:'Coffe LED', 6:'Steam LED', 8:'Bean LED 0', 9:'Bean LED 1', 10:'Size LED', 11:'Size Aqua LED', 12:'Calc Clean', 14:'Water LED', 15:'Waste / Warning', 16:'Play LED'}
     
         #init serial
+        if(sn_serial_main is None or sn_serial_disp is None):
+            self.ser_display="/dev/ttyAMA2"
+            self.ser_mainboard="/dev/ttyAMA3"
+        else:           
+            self.sn_serial_main = sn_serial_main
+            self.sn_serial_disp = sn_serial_disp
+            self.ser_mainboard = self.getSerialDeviceBySerialnumber(self.sn_mainboard)#"/dev/ttyUSB0" #TX_mainboard to RX_Pi_0, RX_mainboard to TX_Pi_0 
+            self.ser_display = self.getSerialDeviceBySerialnumber(self.sn_display)
         self.__init_serial()
+        self.__init_relais()
+        self.__relais_on()
         
         self.running = False
         
@@ -58,10 +70,9 @@ class Philips_2200:
         #TODO enable relais for intercepting TX/RX
 
     def __init_serial(self):
-        self.ser_mainboard = self.getSerialDeviceBySerialnumber(sn_mainboard)#"/dev/ttyUSB0" #TX_mainboard to RX_Pi_0, RX_mainboard to TX_Pi_0
-        self.ser_display = self.getSerialDeviceBySerialnumber(sn_display)
+
         try:
-            self.dev_display = serial.Serial(self.ser_display, write_timeout=1)
+            self.dev_display = serial.Serial(self.ser_display, write_timeout=1)   
             self.dev_mainboard = serial.Serial(self.ser_mainboard,write_timeout=1)
             self.dev_mainboard.baudrate = 115200
             self.dev_mainboard.bytesize = 8
@@ -74,9 +85,35 @@ class Philips_2200:
         except serial.SerialException:
             self.dev_display.close()
             self.dev_mainboard.close()
+            self.__relais_off(self)
+    
+    def __init_relais(self):
+        GPIO.setmode(GPIO.BCM)  # GPIO Nummern statt Board Nummern
+        GPIO.setup(self.RELAIS_PWR_DISP_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
+        GPIO.setup(self.RELAIS_TX_RX_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
+    
+    def __relais_on(self):
+        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # LOW-Pegel --> Relais An	 (Normally Off connected)
+        GPIO.output(self.RELAIS_TX_RX_GPIO, GPIO.LOW)
+    
+    def __relais_off(self):
+        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # LOW-Pegel --> Relais An	 (Normally Off connected)
+        GPIO.output(self.RELAIS_TX_RX_GPIO, GPIO.HIGH)
+    
+    def __relais_pwr_toggle(self, t_off):
+        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # PWR Display Off, GND not connected
+        time.sleep(t_off)
+        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # PWR Display On, GND connected
+        #time.sleep(t_off)
 
-    #TODO implement reading from HASS buttons --> sending display commands to mainboard
-    #TODO write main
+
+
+        #time.sleep(t_off) #double power on with 0.28 works
+        #print("toggle finished")
+    
+
+        
+
     # display commands (display->mainboard:
 
     def forward_mainboard_to_display_update_hass(self):
@@ -84,6 +121,8 @@ class Philips_2200:
             input_main = self.dev_mainboard.read(19)
             self.dev_mainboard.write(input_main)
             self.update_HASS_LED(input_main)
+            return 1
+        return 0
 
     def select_coffee_cmd_routine(self):
         cmd_select_coffee = b'\xd5\x55\x00\x00\x00\x03\x02\x08\x00\x00\x05\x2b'
@@ -128,24 +167,68 @@ class Philips_2200:
             self.dev_display.write(cmd_select_cup_size)
             self.forward_mainboard_to_display_update_hass()
     def power_on_no_clean_cmd_routine(self):
-        cmd_beep = b'TODO'
+        cmd_beep = b'\xd5\x55\x0a\x00\x00\x03\x02\x00\x00\x00\x32\x25'
         cmd_power_on = b'\xd5\x55\x01\x00\x00\x03\x02\x00\x00\x00\x19\x10'
-        for i in range(10): #TODO validate repetitions
+        cmd_select_nothing = 	b'\xd5\x55\x00\x00\x00\x03\x02\x00\x00\x00\x2d\x01'
+        self.__relais_pwr_toggle(0.4)#0.485
+        for i in range(23): #23 from recording
             self.dev_display.write(cmd_beep)
         #TODO test
         #send power on command from DisplayIntercept to Maiboard until the mainboard sends messages to the display
         count = 0
         while(self.dev_mainboard.inWaiting() <= 0):
-            self.dev_display.write(cmd_power_on)
+            if(count < 7500):#150
+                self.dev_display.write(cmd_power_on)
             count +=1
-            if(count > 150):
+            if(count > 10000):
                 print("No response from Mainboard to power on message")
                 break
+        print(count)
+        #time.sleep(1)
+        count_iter = 0
+        count_disp_msg = 0
+        count_main_msg = 0
+        #time.sleep(1)
+        while(True):
+            count_iter +=1   
+            time.sleep(0.5)
+            
+            while(self.dev_display.inWaiting() > 0):
+                if (self.dev_display.read(1) == b'\xd5'): #Startbit received                                         
+                    if (self.dev_display.inWaiting() >= 11): #In case there is data and startbit was received: Forward Display->Mainboard
+                        count_disp_msg +=1
+                        input_disp = b'\xd5' + self.dev_display.read(11)
+                        print("D: "+ " ".join(format(x, "02x") for x in input_disp))
+                        count_main_msg += self.forward_mainboard_to_display_update_hass()
+                        self.dev_display.write(input_disp)
+                        
+                        if(count_disp_msg >= 200):
+                            break
+                        
+            if(count_disp_msg + count_main_msg >= 200):
+                break
+            if(count_iter%3==0):
+                self.__relais_pwr_toggle(0.4)#0.485
+                count_disp_msg = 0
+                count_main_msg = 0
+                print("toggle")
+            count_disp_msg = 0
+            count_main_msg = 0
+            print("Waiting for disp")
+            
+        #print(f'"Count:               {count}')
+        #for i in range(170):
+            #self.dev_display.write(cmd_power_on)
+            
         #power cycle display
-        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # aus
-        time.sleep(0.3) #TODO evaluate this parameter
-        GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # an
-        self.forward_mainboard_to_display_update_hass()
+        #self.__relais_pwr_toggle(0.485) #0.28 (twice),0.47 (1-2mal) 0.48 (1,x mal) 0.5 (1-2mal), 0.51 (1-2mal), 0.52 (1-3mal)
+        
+        
+        #time.sleep(0.05)
+        #time.sleep(0.1)
+        #forward message from mainboard to display
+        #self.forward_mainboard_to_display_update_hass()
+  
 
     '''TODO implement cmd routines
     -DONE power_off_no_clean_cmd_routine
@@ -223,78 +306,82 @@ class Philips_2200:
             print("key error")
             
     def read_HASS_button_actions(self):
-        def read_HASS_button_actions(self):
-            self.next_cmd = None
-            power_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_btn_event')
-            espresso_action = self.hass_helper.get_entity_state('input_boolean.philips_display_espresso_btn')
-            coffee_action = self.hass_helper.get_entity_state('input_boolean.philips_display_coffee_btn_event')
-            water_action = self.hass_helper.get_entity_state('input_boolean.philips_display_hot_water_btn_event')
-            steam_action = self.hass_helper.get_entity_state('input_boolean.philips_display_steam_btn_event')
-            play_action = self.hass_helper.get_entity_state('input_boolean.philips_display_play_btn_event')
-            cup_action = self.hass_helper.get_entity_state('input_boolean.philips_display_cup_btn_event')
-            bean_action = self.hass_helper.get_entity_state('input_boolean.philips_display_bean_btn_event')
-            off_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_off_btn_event')
+        self.next_cmd = None
+        power_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_btn_event')
+        espresso_action = self.hass_helper.get_entity_state('input_boolean.philips_display_espresso_btn')
+        coffee_action = self.hass_helper.get_entity_state('input_boolean.philips_display_coffee_btn_event')
+        water_action = self.hass_helper.get_entity_state('input_boolean.philips_display_hot_water_btn_event')
+        steam_action = self.hass_helper.get_entity_state('input_boolean.philips_display_steam_btn_event')
+        play_action = self.hass_helper.get_entity_state('input_boolean.philips_display_play_btn_event')
+        cup_action = self.hass_helper.get_entity_state('input_boolean.philips_display_cup_btn_event')
+        bean_action = self.hass_helper.get_entity_state('input_boolean.philips_display_bean_btn_event')
+        off_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_off_btn_event')
 
-            if (espresso_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_espresso_btn', 'off')
-                self.next_cmd = self.select_espresso_cmd_routine
-            elif (coffee_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_coffee_btn_event', 'off')
-                self.next_cmd = self.select_coffee_cmd_routine
-            elif (water_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_hot_water_btn_event', 'off')
-                self.next_cmd = self.select_hot_water_cmd_routine
-            elif (steam_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_steam_btn_event', 'off')
-                self.next_cmd = self.select_steam_cmd_routine
-            elif (play_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_play_btn_event', 'off')
-                self.next_cmd = self.select_play_cmd_routine
-            elif (power_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_power_btn_event', 'off')
-                self.next_cmd = self.power_on_no_clean_cmd_routine
-                print("power on")
-            elif (cup_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_cup_btn_event', 'off')
-                self.next_cmd = self.select_cup_cmd_routine
-            elif (bean_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_bean_btn_event', 'off')
-                self.next_cmd = self.select_bean_cmd_routine
-            elif (off_action == 'on'):
-                self.hass_helper.set_entity_state('input_boolean.philips_display_power_off_btn_event', 'off')
-                self.next_cmd = self.power_off_no_clean_cmd_routine
-            else:
-                print("none")
+        if (espresso_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_espresso_btn', 'off')
+            self.next_cmd = self.select_espresso_cmd_routine
+        elif (coffee_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_coffee_btn_event', 'off')
+            self.next_cmd = self.select_coffee_cmd_routine
+        elif (water_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_hot_water_btn_event', 'off')
+            self.next_cmd = self.select_hot_water_cmd_routine
+        elif (steam_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_steam_btn_event', 'off')
+            self.next_cmd = self.select_steam_cmd_routine
+        elif (play_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_play_btn_event', 'off')
+            self.next_cmd = self.select_play_cmd_routine
+        elif (power_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_power_btn_event', 'off')
+            self.next_cmd = self.power_on_no_clean_cmd_routine
+            print("power on")
+        elif (cup_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_cup_btn_event', 'off')
+            self.next_cmd = self.select_cup_cmd_routine
+        elif (bean_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_bean_btn_event', 'off')
+            self.next_cmd = self.select_bean_cmd_routine
+        elif (off_action == 'on'):
+            self.hass_helper.set_entity_state('input_boolean.philips_display_power_off_btn_event', 'off')
+            self.next_cmd = self.power_off_no_clean_cmd_routine
+        else:
+            print("none")
 
     def run(self):
         self.running = True
         i = 0
         while (self.running):
             try:
-                while (True):
-                    if (self.dev_display.inWaiting() == 0):
-                        break
+                while (self.dev_display.inWaiting() > 0): #if there is data from display, wait until startbit is received                  
                     if (self.dev_display.read(1) == b'\xd5'):
                         break
-                        # Display->Mainboard
+                #In case there is data and startbit was received: Forward Display->Mainboard
                 if (self.dev_display.inWaiting() >= 11):
                     input_disp = b'\xd5' + self.dev_display.read(11)
-                    # print(" ".join(format(x, "02x") for x in input_disp))
+                    #print("D: "+ " ".join(format(x, "02x") for x in input_disp))
                     self.dev_display.write(input_disp)
-                else:
+                    #print("sent disp->main")
+                    #print(f'D:{input_disp}')
+                #else:
+                    #pass
+                    #cmd_select_nothing = 	b'\xd5\x55\x00\x00\x00\x03\x02\x00\x00\x00\x2d\x01'
                     # TODO: this cmd is only necessary, when the display does not start up
                     # should net be sent, when device is turned off
-                    self.dev_display.write(self.cmd_select_nothing)
-                while (True):
-                    if (self.dev_mainboard.inWaiting() == 0):
-                        break
+                    #TODO test this
+                    #self.dev_display.write(cmd_select_nothing)
+                while (self.dev_mainboard.inWaiting() > 0): #if there is data from mainboard, wait until startbit is received
                     if (self.dev_mainboard.read(1) == b'\xd5'):
+                        #print("mainboard data rec")
                         break
                         # Mainboard->Display
-                if (self.dev_mainboard.inWaiting() >= 19):
-                    input_main = b'\xd5' + self.dev_mainboard.read(19)
+                if (self.dev_mainboard.inWaiting() >= 18): #In case there is data from mainboard and startbit was received: Forward Mainboard->Display, update HASS
+                    input_main = b'\xd5' + self.dev_mainboard.read(18)
                     self.dev_mainboard.write(input_main)
-                    self.update_HASS_LED(input_main)
+                    if(i % 10 == 0):
+                        self.update_HASS_LED(input_main)
+                    #print("sent mainb->disp")
+                    #print("M: "+ " ".join(format(x, "02x") for x in input_main))
                 i += 1
 
                 if (i % 100 == 0):
@@ -302,6 +389,7 @@ class Philips_2200:
                     self.read_HASS_button_actions()
                     if (self.next_cmd is not None):
                         self.next_cmd()
+                        print("cmd executed")
                             #Mainboard->Display
 
             except serial.SerialException as e:
@@ -311,10 +399,12 @@ class Philips_2200:
                 self.__init_serial()
                 pass
             except Exception as e:
+                self.__relais_off(self)
                 print(str(type(e)) + e.message)
                 
 if __name__ == '__main__':
-    sn_mainboard = "0001"
-    sn_display = "TGLBK1NM"
-    coffee = Philips_2200(sn_mainboard,sn_display,token)
+    #sn_mainboard = "0001"
+    #sn_display = "TGLBK1NM"
+    coffee = Philips_2200(token)
     coffee.run()
+
