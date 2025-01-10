@@ -16,20 +16,13 @@ class Philips_2200:
         self.RELAIS_PWR_DISP_GPIO = 17
         self.RELAIS_TX_RX_GPIO = 27 #RELAIS ON = MITM mode, #RELAIS Off = Normal mode
 
-        #GPIO.setup(self.RELAIS_PWR_DISP_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
-        #GPIO.setup(self.RELAIS_TX_RX_GPIO, GPIO.OUT)  # GPIO Modus zuweisen
-                #GPIO.output(RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # aus
-        #GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # an
-        #GPIO.output(self.RELAIS_TX_RX_GPIO, GPIO.LOW)  # MITM Mode (intercept communication between mainboard and display)
-        #usb <-> serial uart device serial numbers
-        #can be retrieved e.g. via shell: /bin/udevadm info --name=/dev/ttyUSB0 | grep ID_USB_SERIAL_SHORT
         self.sn_serial_main = sn_serial_main
         self.sn_serial_disp = sn_serial_disp
         
         self.persistant_HASS_token = persistant_HASS_token
         
         #send repetitions for the display commands
-        self.cmd_rep = 20 #35 #TODO check this parameter
+        self.cmd_rep = 20
 
         #mainboard protocol state definitions (mainboard -> display)
         self.preAmbelStates = {0xd5:'correct_0',0x55:'correct_1'}
@@ -198,7 +191,7 @@ class Philips_2200:
                     if (self.dev_display.inWaiting() >= 11): #In case there is data and startbit was received: Forward Display->Mainboard
                         count_disp_msg +=1
                         input_disp = b'\xd5' + self.dev_display.read(11)
-                        print("D: "+ " ".join(format(x, "02x") for x in input_disp))
+                        #print("D: "+ " ".join(format(x, "02x") for x in input_disp))
                         count_main_msg += self.forward_mainboard_to_display_update_hass()
                         self.dev_display.write(input_disp)
                         
@@ -346,7 +339,8 @@ class Philips_2200:
             self.hass_helper.set_entity_state('input_boolean.philips_display_power_off_btn_event', 'off')
             self.next_cmd = self.power_off_no_clean_cmd_routine
         else:
-            print("none")
+            #print("none")
+            pass
 
     def run(self):
         self.running = True
@@ -361,15 +355,7 @@ class Philips_2200:
                     input_disp = b'\xd5' + self.dev_display.read(11)
                     #print("D: "+ " ".join(format(x, "02x") for x in input_disp))
                     self.dev_display.write(input_disp)
-                    #print("sent disp->main")
-                    #print(f'D:{input_disp}')
-                #else:
-                    #pass
-                    #cmd_select_nothing = 	b'\xd5\x55\x00\x00\x00\x03\x02\x00\x00\x00\x2d\x01'
-                    # TODO: this cmd is only necessary, when the display does not start up
-                    # should net be sent, when device is turned off
-                    #TODO test this
-                    #self.dev_display.write(cmd_select_nothing)
+
                 while (self.dev_mainboard.inWaiting() > 0): #if there is data from mainboard, wait until startbit is received
                     if (self.dev_mainboard.read(1) == b'\xd5'):
                         #print("mainboard data rec")
@@ -390,7 +376,7 @@ class Philips_2200:
                     if (self.next_cmd is not None):
                         self.next_cmd()
                         print("cmd executed")
-                            #Mainboard->Display
+                    #Mainboard->Display
 
             except serial.SerialException as e:
                 print(e.message + "error at serial i/o")
