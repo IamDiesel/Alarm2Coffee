@@ -15,7 +15,7 @@ Components used:
 - LUCKFOX DSI Capacitive 7 inch Touch Screen with Case
 - Jumper Wire / cables / glue / screws / ...
 
-### Set up home assistant ###
+### Install home assistant on Raspberry Pi 5 ###
 - Use Pi Imager to flash SD card (see https://developbyter.com/home-assistant-auf-raspberry-pi-installieren-und-einrichten/) 
 - create empty file called "ssh" on sd card "bootfs"
 - tell router to give RPi a constant IP address
@@ -73,13 +73,10 @@ wget -y
   - configure autostart: sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
     - add the following lines:
 ´´´
-# Mauszeiger Ausblenden
 @unclutter
-# Bildschirmschoner ausschalten
 @xset s off
 @xset -dpms
 @xset s noblank
-# Startet Chromium im Vollbild und öffnet Home Assistant
 @chromium-browser --noerrdialogs --check-for-update-interval=31536000 --disable-infobars --kiosk http://127.0.0.1:8123/
 ´´´
   - activate autologin on pi
@@ -101,8 +98,46 @@ homeassistant:
         192.168.2.43: 6a24b8249e22445x1cd1797123471221  # Map the IP address to the user ID
       allow_bypass_login: true
    ´´´   
+- install 7inch display (https://wiki.luckfox.com/):
+  - sudo nano /boot/config.txt
+  - add the following lines:
+ 
+´´´
+dtoverlay=vc4-kms-v3d
+dtoverlay=vc4-kms-dsi-7inch
+´´´
+### configure home assistant ###
+## Create entities (German) ##
+Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
+![image](https://github.com/user-attachments/assets/92806d0c-d983-4e49-8316-0e5e1caac7e1)
+![image](https://github.com/user-attachments/assets/e3ebc246-aa10-4801-9fed-4610fc1dc235)
+![image](https://github.com/user-attachments/assets/1ed82db4-cce8-4a71-af64-9677af77bd7e)
 
+## setup alarm (Android) ##
+- Open the Home Assistant App menu and select Settings
+- Go to Companion App
+- Select Manage Sensors
+- Find the Next Alarm sensor
+- Enable the Next Alarm sensor
+- Create automation: „Einstellungen“->“Automatisierung & Szenen“->“Automatisierung erstellen““Neue Automatisierung“
+  - Auslöser hinzufügen: “Andere Auslöser“-->“Template“
+  - Template code:
+    ´´´
+    {{(now()+timedelta(0,60)).strftime('%a %h %d %H:%M %Z %Y') == (((state_attr('sensor.pixel_9_pro_next_alarm', 'Time in Milliseconds') | int / 1000) ) | timestamp_custom('%a %h %d %H:%M %Z %Y'))}}
+    ´´´
+  - add action:
+![image](https://github.com/user-attachments/assets/566ee146-ef02-4c4b-a345-3907a6c4f3d8)
 
+## setup alarm (iOs) ##
+The focus sensor can be used to determine when the alarm went off.
+- Create iOS shortcut named "HAss focus": deactivate focus
+- Create iOS automation that executes the "Hass focus" everytime an alarm goes off
+Now the companion app focus sensor of the iOS device can be used to trigger automations in Home-Assistant
+- Create Home-Assistant automation:
+![image](https://github.com/user-attachments/assets/f4baeaf1-41d1-4444-a85e-a35bb300ae05)
+![image](https://github.com/user-attachments/assets/251a9fb4-3a34-449d-9c30-0792378ff227)
+![image](https://github.com/user-attachments/assets/eac863b2-9854-4228-8236-fb4d34a07f53)
+![image](https://github.com/user-attachments/assets/31d42838-ae8a-4857-8097-fc2410e5e0dc)
 
 
 ![image](https://github.com/user-attachments/assets/6edd467b-ddb7-4753-a80a-c2255f193521)
