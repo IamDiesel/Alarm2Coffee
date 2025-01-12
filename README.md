@@ -251,223 +251,140 @@ sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philip
 
 ~~~
 
-views:
-  - type: sections
-    max_columns: 2
-    title: Kaffee
-    path: kaffee
-    icon: mdi:coffee
-    sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading: Drink Selection
-            heading_style: title
-          - type: tile
-            entity: input_button.philips_display_espresso_btn
-            name: Espresso
-            show_entity_picture: true
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.philips_display_coffee_btn
-            name: Coffee
-            show_entity_picture: false
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.philips_display_hot_water_btn
-            name: Hot Water
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.philips_display_steam_btn
-            name: Steam
-            tap_action:
-              action: toggle
-          - type: heading
-            icon: ''
-            heading: Power
-            heading_style: subtitle
-          - type: tile
-            entity: input_button.philips_display_power_btn
-            name: Power On
-            icon_tap_action:
-              action: toggle
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.philips_display_power_off_btn
-            name: Power Off
-            tap_action:
-              action: toggle
-        column_span: 1
-      - type: grid
-        cards:
-          - type: heading
-            heading: Current Selection
-            heading_style: title
-          - type: tile
-            entity: input_boolean.philips_mainboard_espresso_led
-            name: Espresso
-            show_entity_picture: true
-            vertical: false
-            hide_state: false
-          - type: tile
-            entity: input_boolean.philips_mainboard_coffee_led
-            name: Coffee
-          - type: tile
-            entity: input_boolean.philips_mainboard_hot_water_led
-            name: Hot Water
-          - type: tile
-            entity: input_boolean.philips_mainboard_steam_led
-            name: Steam
-          - type: heading
-            icon: ''
-            heading: My Coffee Choice
-            heading_style: subtitle
-          - type: tile
-            entity: input_button.philips_display_bean_btn
-            name: Bean
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.philips_display_cup_btn
-            name: Cup Size
-            icon_tap_action:
-              action: toggle
-            tap_action:
-              action: toggle
-          - type: tile
-            entity: input_button.input_button_philips_display_play_btn
-            name: Start
-            color: green
-            tap_action:
-              action: toggle
-      - type: grid
-        cards:
-          - type: heading
-            heading_style: title
-            icon: mdi:alarm
-            badges:
-              - type: entity
-                entity: input_boolean.philips_alarm_daniel
-              - type: entity
-                entity: sensor.pixel_9_pro_next_alarm
-              - type: entity
-                entity: input_boolean.philips_alarm_anne
-            heading: Mit Wecker einschalten
-          - type: tile
+type: sections
+max_columns: 2
+title: Kaffee
+path: kaffee
+icon: mdi:coffee
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Drink Selection
+        heading_style: title
+      - type: tile
+        entity: input_button.philips_display_espresso_btn
+        name: Espresso
+        show_entity_picture: true
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.philips_display_coffee_btn
+        name: Coffee
+        show_entity_picture: false
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.philips_display_hot_water_btn
+        name: Hot Water
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.philips_display_steam_btn
+        name: Steam
+        tap_action:
+          action: toggle
+      - type: heading
+        icon: ""
+        heading: Power
+        heading_style: subtitle
+      - type: tile
+        entity: input_button.philips_display_power_btn
+        name: Power On
+        icon_tap_action:
+          action: toggle
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.philips_display_power_off_btn
+        name: Power Off
+        tap_action:
+          action: toggle
+    column_span: 1
+  - type: grid
+    cards:
+      - type: heading
+        heading: Current Selection
+        heading_style: title
+      - type: tile
+        entity: input_boolean.philips_mainboard_espresso_led
+        name: Espresso
+        show_entity_picture: true
+        vertical: false
+        hide_state: false
+      - type: tile
+        entity: input_boolean.philips_mainboard_coffee_led
+        name: Coffee
+      - type: tile
+        entity: input_boolean.philips_mainboard_hot_water_led
+        name: Hot Water
+      - type: tile
+        entity: input_boolean.philips_mainboard_steam_led
+        name: Steam
+      - type: heading
+        icon: ""
+        heading: My Coffee Choice
+        heading_style: subtitle
+      - type: tile
+        entity: input_button.philips_display_bean_btn
+        name: Bean
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.philips_display_cup_btn
+        name: Cup Size
+        icon_tap_action:
+          action: toggle
+        tap_action:
+          action: toggle
+      - type: tile
+        entity: input_button.input_button_philips_display_play_btn
+        name: Start
+        color: green
+        tap_action:
+          action: toggle
+  - type: grid
+    cards:
+      - type: heading
+        heading_style: title
+        icon: mdi:alarm
+        badges:
+          - type: entity
             entity: input_boolean.philips_alarm_daniel
-            tap_action:
-              action: toggle
-            name: Alarm2Coffee Daniel
-            grid_options:
-              columns: 12
-              rows: 1
-          - type: tile
-            entity: input_boolean.philips_alarm_anne
-            tap_action:
-              action: toggle
-            name: Alarm2Coffee Anne
-            grid_options:
-              columns: 12
-              rows: 1
-          - type: tile
+          - type: entity
             entity: sensor.pixel_9_pro_next_alarm
-            grid_options:
-              columns: 12
-              rows: 2
-            name: Nächster Wecker Daniel
-            hide_state: false
-            show_entity_picture: false
-            vertical: true
-            state_content:
-              - state
-              - Local Time
-        column_span: 2
-  - title: Fuchsbau Energieerzeugung
-    sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading_style: title
-            heading: Fuchsbau Energeerzeugung
-          - graph: line
-            type: sensor
-            entity: sensor.powerstream_4932_inverter_output_watts
-            detail: 2
-            name: Einspeisung
-          - graph: line
-            type: sensor
-            entity: sensor.powerstream_4932_smart_plug_loads
-            detail: 2
-            name: SmartPlugs Verbrauch
-            grid_options:
-              columns: 6
-              rows: 2
-          - type: entities
-            entities:
-              - entity: sensor.powerstream_4932_status
-                name: Status
-              - entity: sensor.powerstream_4932_inverter_on_off_status
-                name: Inverter On/Off Status
-              - entity: sensor.powerstream_4932_solar_1_watts
-                name: Solar 1 Watts
-              - entity: sensor.powerstream_4932_solar_2_watts
-                name: Solar 2 Watts
-              - entity: sensor.powerstream_4932_battery_input_watts
-                name: Battery Input Watts
-              - entity: sensor.powerstream_4932_other_loads
-                name: Other Loads
-              - entity: sensor.powerstream_4932_rated_power
-                name: Rated Power
-            title: Power Stream Solar
-            state_color: false
-      - type: grid
-        cards:
-          - type: heading
-            heading_style: title
-            heading: Historie Fuchsbau Energieerzeugung
-          - chart_type: line
-            period: hour
-            type: statistics-graph
-            entities:
-              - sensor.powerstream_4932_inverter_output_watts
-            stat_types:
-              - min
-              - max
-              - mean
-            title: Einspeisung
-    cards: []
-    type: sections
-    max_columns: 4
-    icon: mdi:solar-panel-large
-  - type: sections
-    max_columns: 4
-    title: Fernbedienung
-    path: fernbedienung
-    icon: mdi:remote-tv
-    sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading: Viktoria
-            heading_style: title
-            icon: mdi:speaker
-          - type: tile
-            entity: automation.viktoria_an_aus
-            tap_action:
-              action: perform-action
-              perform_action: script.viktoria_on_off
-              target: {}
-            icon_tap_action:
-              action: perform-action
-              perform_action: script.viktoria_on_off
-              target: {}
-            name: On / Off
-            icon: mdi:power
-            vertical: false
-            hide_state: true
+          - type: entity
+            entity: input_boolean.philips_alarm_anne
+        heading: Mit Wecker einschalten
+      - type: tile
+        entity: input_boolean.philips_alarm_daniel
+        tap_action:
+          action: toggle
+        name: Alarm2Coffee Daniel
+        grid_options:
+          columns: 12
+          rows: 1
+      - type: tile
+        entity: input_boolean.philips_alarm_anne
+        tap_action:
+          action: toggle
+        name: Alarm2Coffee Anne
+        grid_options:
+          columns: 12
+          rows: 1
+      - type: tile
+        entity: sensor.pixel_9_pro_next_alarm
+        grid_options:
+          columns: 12
+          rows: 2
+        name: Nächster Wecker Daniel
+        hide_state: false
+        show_entity_picture: false
+        vertical: true
+        state_content:
+          - state
+          - Local Time
+    column_span: 2
+
             
 ~~~
