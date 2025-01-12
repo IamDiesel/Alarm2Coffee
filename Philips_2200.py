@@ -97,17 +97,8 @@ class Philips_2200:
         GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # PWR Display Off, GND not connected
         time.sleep(t_off)
         GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # PWR Display On, GND connected
-        #time.sleep(t_off)
 
-
-
-        #time.sleep(t_off) #double power on with 0.28 works
-        #print("toggle finished")
-    
-
-        
-
-    # display commands (display->mainboard:
+    # display commands (display->mainboard):
 
     def forward_mainboard_to_display_update_hass(self):
         if (self.dev_mainboard.inWaiting() >= 19):
@@ -177,11 +168,9 @@ class Philips_2200:
                 print("No response from Mainboard to power on message")
                 break
         print(count)
-        #time.sleep(1)
         count_iter = 0
         count_disp_msg = 0
         count_main_msg = 0
-        #time.sleep(1)
         while(True):
             count_iter +=1   
             time.sleep(0.5)
@@ -208,27 +197,10 @@ class Philips_2200:
             count_disp_msg = 0
             count_main_msg = 0
             print("Waiting for disp")
-            
-        #print(f'"Count:               {count}')
-        #for i in range(170):
-            #self.dev_display.write(cmd_power_on)
-            
-        #power cycle display
-        #self.__relais_pwr_toggle(0.485) #0.28 (twice),0.47 (1-2mal) 0.48 (1,x mal) 0.5 (1-2mal), 0.51 (1-2mal), 0.52 (1-3mal)
-        
-        
-        #time.sleep(0.05)
-        #time.sleep(0.1)
-        #forward message from mainboard to display
-        #self.forward_mainboard_to_display_update_hass()
-  
 
     '''TODO implement cmd routines
-    -DONE power_off_no_clean_cmd_routine
-    -power_off_clean_cmd_routine
-    -power_on_clean_cmd_routine
-    -DONE select_bean_cmd_routine
-    -DONE select_cup_cmd_routine
+    #1) instead of waiting 60s for HAss to boot, check weather HAss is online and sleep for x secs if not online then try again
+    #2) refactor
     '''
 
     class HASS_Helper:
@@ -246,10 +218,6 @@ class Philips_2200:
             entity = client.get_entity(entity_id=entity_id) #session is closed after this call
             return entity.get_state().state
 
-    #class Machine_State:
-
-        
-    
     def getSerialDeviceBySerialnumber(self, serialnumber):
         device = None
         for i in range(10):
@@ -297,50 +265,55 @@ class Philips_2200:
             #hass.states.set('input_boolean.philips_mainboard_steam_led',rd_led_state)                 
         except KeyError:
             print("key error")
+        except Exception:
+            self.__relais_off()
             
     def read_HASS_button_actions(self):
         self.next_cmd = None
-        power_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_btn_event')
-        espresso_action = self.hass_helper.get_entity_state('input_boolean.philips_display_espresso_btn')
-        coffee_action = self.hass_helper.get_entity_state('input_boolean.philips_display_coffee_btn_event')
-        water_action = self.hass_helper.get_entity_state('input_boolean.philips_display_hot_water_btn_event')
-        steam_action = self.hass_helper.get_entity_state('input_boolean.philips_display_steam_btn_event')
-        play_action = self.hass_helper.get_entity_state('input_boolean.philips_display_play_btn_event')
-        cup_action = self.hass_helper.get_entity_state('input_boolean.philips_display_cup_btn_event')
-        bean_action = self.hass_helper.get_entity_state('input_boolean.philips_display_bean_btn_event')
-        off_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_off_btn_event')
+        try:
+            power_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_btn_event')
+            espresso_action = self.hass_helper.get_entity_state('input_boolean.philips_display_espresso_btn')
+            coffee_action = self.hass_helper.get_entity_state('input_boolean.philips_display_coffee_btn_event')
+            water_action = self.hass_helper.get_entity_state('input_boolean.philips_display_hot_water_btn_event')
+            steam_action = self.hass_helper.get_entity_state('input_boolean.philips_display_steam_btn_event')
+            play_action = self.hass_helper.get_entity_state('input_boolean.philips_display_play_btn_event')
+            cup_action = self.hass_helper.get_entity_state('input_boolean.philips_display_cup_btn_event')
+            bean_action = self.hass_helper.get_entity_state('input_boolean.philips_display_bean_btn_event')
+            off_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_off_btn_event')
 
-        if (espresso_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_espresso_btn', 'off')
-            self.next_cmd = self.select_espresso_cmd_routine
-        elif (coffee_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_coffee_btn_event', 'off')
-            self.next_cmd = self.select_coffee_cmd_routine
-        elif (water_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_hot_water_btn_event', 'off')
-            self.next_cmd = self.select_hot_water_cmd_routine
-        elif (steam_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_steam_btn_event', 'off')
-            self.next_cmd = self.select_steam_cmd_routine
-        elif (play_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_play_btn_event', 'off')
-            self.next_cmd = self.select_play_cmd_routine
-        elif (power_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_power_btn_event', 'off')
-            self.next_cmd = self.power_on_no_clean_cmd_routine
-            print("power on")
-        elif (cup_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_cup_btn_event', 'off')
-            self.next_cmd = self.select_cup_cmd_routine
-        elif (bean_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_bean_btn_event', 'off')
-            self.next_cmd = self.select_bean_cmd_routine
-        elif (off_action == 'on'):
-            self.hass_helper.set_entity_state('input_boolean.philips_display_power_off_btn_event', 'off')
-            self.next_cmd = self.power_off_no_clean_cmd_routine
-        else:
-            #print("none")
-            pass
+            if (espresso_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_espresso_btn', 'off')
+                self.next_cmd = self.select_espresso_cmd_routine
+            elif (coffee_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_coffee_btn_event', 'off')
+                self.next_cmd = self.select_coffee_cmd_routine
+            elif (water_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_hot_water_btn_event', 'off')
+                self.next_cmd = self.select_hot_water_cmd_routine
+            elif (steam_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_steam_btn_event', 'off')
+                self.next_cmd = self.select_steam_cmd_routine
+            elif (play_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_play_btn_event', 'off')
+                self.next_cmd = self.select_play_cmd_routine
+            elif (power_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_power_btn_event', 'off')
+                self.next_cmd = self.power_on_no_clean_cmd_routine
+                print("power on")
+            elif (cup_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_cup_btn_event', 'off')
+                self.next_cmd = self.select_cup_cmd_routine
+            elif (bean_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_bean_btn_event', 'off')
+                self.next_cmd = self.select_bean_cmd_routine
+            elif (off_action == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_power_off_btn_event', 'off')
+                self.next_cmd = self.power_off_no_clean_cmd_routine
+            else:
+                #print("none")
+                pass
+        except Exception:
+            self.__relais_off()
 
     def run(self):
         self.running = True
@@ -385,12 +358,16 @@ class Philips_2200:
                 self.__init_serial()
                 pass
             except Exception as e:
-                self.__relais_off(self)
+                self.__relais_off()
                 print(str(type(e)) + e.message)
                 
 if __name__ == '__main__':
     #sn_mainboard = "0001"
     #sn_display = "TGLBK1NM"
     coffee = Philips_2200(token)
-    coffee.run()
+    try:
+        time.sleep(60)
+        coffee.run()
+    except Exception:
+        coffee.__relais_off()
 
