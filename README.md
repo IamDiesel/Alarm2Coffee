@@ -141,11 +141,16 @@ Now the companion app focus sensor of the iOS device can be used to trigger auto
 
 ### Disassemble coffee machine ###
 The coffee machine's display can be disassembled using a plastic tool.
+
 ![image](https://github.com/user-attachments/assets/7165692b-b229-4711-93ef-43abf203967e)
+
 The wiring between display and mainboard is as follows:
+
 ![image](https://github.com/user-attachments/assets/979c58ba-b3b3-43a2-ae99-369fd36aa86d)
+
 Communication is run via UART @115200
 The state of the coffeemachine ist sent from the mainboard to the display. The button events are sent from the display to the mainboard.
+
 ## Mainboard -> Display
 
 ![image](https://github.com/user-attachments/assets/1ac3123b-a995-4a80-84e9-cca3d36cf012)
@@ -156,15 +161,15 @@ The state of the coffeemachine ist sent from the mainboard to the display. The b
 
 # On / Off #
 
-´´
+´´´
 On / Off Beep: d5 55 0a 00 00 03 02 00 00 00 32 25
 Power on without cleaning cycle: d5 55 01 00 00 03 02 00 00 00 19 10	
 Power Off no Cleaning cycle?: d5550000000302010000210c
-´´
+´´´
 
 # Drink Selection: # 
 
-´´
+´´´
 Select Nothing: 		d5 55 00 00 00 03 02 00 00 00 2d 01
 Select Espresso:	d5 55 00 00 00 03 02 02 00 00 35 1a 	Nachricht wird 13x gesendet
 perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
@@ -172,17 +177,18 @@ perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
 Hot Water:		d5 55 00 00 00 03 02 04 00 00 1d 36
 Select Coffee:		d5 55 00 00 00 03 02 08 00 00 05 2b	Nachricht wird 8x gesendet
 Steam:			d5 55 00 00 00 03 02 10 00 00 35 11	Nachricht wird 32x gesendet
-´´
+´´´
 
 # Settings: #
 
-´´
+´´´
+
 d5 55 00 00 00 03 02 00 02 00 35 18	Bean Size
 d5 55 00 00 00 03 02 00 04 00 1c 32	Coffee Size
 Play:
 d5 55 00 00 00 03 02 00 00 01 25 05 	Play-Button (espresso, 39x)
 perl -e 'print pack "H*", "d55500000003020000012505"' > /dev/ttyUSB2
-´´
+´´´
 
 For both mainboard messages and display messages the CRC algorithm is currently unknown. So it might be necessary to record the messages individually.
 
@@ -218,12 +224,17 @@ Add the following lines via "sudo nano /boot/config.txt":
 - install pyserial: .coffee/bin/pip install pyserial
 
 ### Finish ###
+
+![WhatsApp Bild 2025-01-12 um 21 23 38_4eb5911e](https://github.com/user-attachments/assets/73a34edb-14ac-4d31-bebd-994a65028bc4)
+
 - Thats it. Now run Philips_2200.py and the RPI will inject the respective display commands, when the respective Home Assistant buttons are pushed. In Addition a alarm will trigger a power on command sent to the coffee machine.
+- the relay boards fit nicely behind the display. I glued screws on the backside of the display module in order to fit the relay boards to the display.
 - In order to run the python script on startup the following lines can be added to rc.local via sudo nano /etc/rc.local:
 sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philips_pi/Philips_2200.py > /home/fuchsi/Documents/philips_pi/alarm2coffee.log 2>&1' &
 - Also a dashboard can be created in order to interact with the coffeemachine via smartphone. Here is mine:
 
-´
+´´´
+
 views:
   - type: sections
     max_columns: 2
@@ -442,4 +453,5 @@ views:
             icon: mdi:power
             vertical: false
             hide_state: true
-´
+            
+´´´
