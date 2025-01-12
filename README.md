@@ -147,14 +147,24 @@ The wiring between display and mainboard is as follows:
 Communication is run via UART @115200
 The state of the coffeemachine ist sent from the mainboard to the display. The button events are sent from the display to the mainboard.
 ## Mainboard -> Display
+
 ![image](https://github.com/user-attachments/assets/1ac3123b-a995-4a80-84e9-cca3d36cf012)
+
 ## Display -> Mainboard
+
 ![image](https://github.com/user-attachments/assets/b3d6cad4-577e-4da2-b39c-02a41aa92d71)
+
 # On / Off #
+
+´´
 On / Off Beep: d5 55 0a 00 00 03 02 00 00 00 32 25
 Power on without cleaning cycle: d5 55 01 00 00 03 02 00 00 00 19 10	
 Power Off no Cleaning cycle?: d5550000000302010000210c
+´´
+
 # Drink Selection: # 
+
+´´
 Select Nothing: 		d5 55 00 00 00 03 02 00 00 00 2d 01
 Select Espresso:	d5 55 00 00 00 03 02 02 00 00 35 1a 	Nachricht wird 13x gesendet
 perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
@@ -162,23 +172,274 @@ perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
 Hot Water:		d5 55 00 00 00 03 02 04 00 00 1d 36
 Select Coffee:		d5 55 00 00 00 03 02 08 00 00 05 2b	Nachricht wird 8x gesendet
 Steam:			d5 55 00 00 00 03 02 10 00 00 35 11	Nachricht wird 32x gesendet
+´´
 
 # Settings: #
+
+´´
 d5 55 00 00 00 03 02 00 02 00 35 18	Bean Size
 d5 55 00 00 00 03 02 00 04 00 1c 32	Coffee Size
 Play:
 d5 55 00 00 00 03 02 00 00 01 25 05 	Play-Button (espresso, 39x)
 perl -e 'print pack "H*", "d55500000003020000012505"' > /dev/ttyUSB2
+´´
 
 For both mainboard messages and display messages the CRC algorithm is currently unknown. So it might be necessary to record the messages individually.
 
 ### Connect relais, UART and power ###
 
+The relayboard 1 is used as a failsafe when the pi does not power on. In that case the UART connection will be set directly between display and mainboard. When the relay is activated the raspberry pi act as MITM.
+Relayboard 2 is used to reset the display when activated via power on command incection. A power cycle will activate the display.
+Here is the connection diagram:
 
-![image](https://github.com/user-attachments/assets/6edd467b-ddb7-4753-a80a-c2255f193521)
-![image](https://github.com/user-attachments/assets/7c53dc47-85c7-4b10-af37-67e7f8e76245)
+![image](https://github.com/user-attachments/assets/06c0d2ef-7039-492d-913c-45ca3747fa98)
+
+### Activate UART2/3 and GPIO on RPi5 & ### 
+
+Add the following lines via "sudo nano /boot/config.txt":
+
+![image](https://github.com/user-attachments/assets/f6b4094f-8aa5-4367-96f9-00942d288cfb)
+
+- ttyAMA2	Display	Pin 7 (GPIO 4)	TX
+- ttyAMA2	Display	Pin 29 (GPIO 5)	RX
+- ttyAMA3	Mainboard	Pin 24 (GPIO 8)	TX
+- ttyAMA3	Mainboard	Pin 21 (GPIO 9)	RX
+
+- In order to use GPIO on RPi5 another package is required: .coffee/bin/pip install rpi-lgpio
+- It could be necessary to uninstall the RPi GPIO first: .coffee/bin/pip uninstall Rpi.GPIO
 
 
-![image](https://github.com/user-attachments/assets/dc2dd292-99fb-4197-b349-5e12bf7a544b)
-![image](https://github.com/user-attachments/assets/8e20e739-89e3-49aa-bd87-213486f3c857)
-![image](https://github.com/user-attachments/assets/353445e3-020b-46de-9627-82c6d6ceafdc)
+### Setup Home Assistant API / install the required pyhton packages ###
+
+- Create a longliving HAss token in HAss: Profil->Sicherheit
+  - safe this token in a file called "HASS_Token.py" with: token = "asdjalksdjkasjdklasjd your token asdlkalösdkaölsd"
+- Create venv:  python3 -m venv .coffee
+- install Home assistant: .coffee/bin/pip install homeassistant_api
+- install pyserial: .coffee/bin/pip install pyserial
+
+### Finish ###
+- Thats it. Now run Philips_2200.py and the RPI will inject the respective display commands, when the respective Home Assistant buttons are pushed. In Addition a alarm will trigger a power on command sent to the coffee machine.
+- In order to run the python script on startup the following lines can be added to rc.local via sudo nano /etc/rc.local:
+sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philips_pi/Philips_2200.py > /home/fuchsi/Documents/philips_pi/alarm2coffee.log 2>&1' &
+- Also a dashboard can be created in order to interact with the coffeemachine via smartphone. Here is mine:
+
+´
+views:
+  - type: sections
+    max_columns: 2
+    title: Kaffee
+    path: kaffee
+    icon: mdi:coffee
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Drink Selection
+            heading_style: title
+          - type: tile
+            entity: input_button.philips_display_espresso_btn
+            name: Espresso
+            show_entity_picture: true
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.philips_display_coffee_btn
+            name: Coffee
+            show_entity_picture: false
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.philips_display_hot_water_btn
+            name: Hot Water
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.philips_display_steam_btn
+            name: Steam
+            tap_action:
+              action: toggle
+          - type: heading
+            icon: ''
+            heading: Power
+            heading_style: subtitle
+          - type: tile
+            entity: input_button.philips_display_power_btn
+            name: Power On
+            icon_tap_action:
+              action: toggle
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.philips_display_power_off_btn
+            name: Power Off
+            tap_action:
+              action: toggle
+        column_span: 1
+      - type: grid
+        cards:
+          - type: heading
+            heading: Current Selection
+            heading_style: title
+          - type: tile
+            entity: input_boolean.philips_mainboard_espresso_led
+            name: Espresso
+            show_entity_picture: true
+            vertical: false
+            hide_state: false
+          - type: tile
+            entity: input_boolean.philips_mainboard_coffee_led
+            name: Coffee
+          - type: tile
+            entity: input_boolean.philips_mainboard_hot_water_led
+            name: Hot Water
+          - type: tile
+            entity: input_boolean.philips_mainboard_steam_led
+            name: Steam
+          - type: heading
+            icon: ''
+            heading: My Coffee Choice
+            heading_style: subtitle
+          - type: tile
+            entity: input_button.philips_display_bean_btn
+            name: Bean
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.philips_display_cup_btn
+            name: Cup Size
+            icon_tap_action:
+              action: toggle
+            tap_action:
+              action: toggle
+          - type: tile
+            entity: input_button.input_button_philips_display_play_btn
+            name: Start
+            color: green
+            tap_action:
+              action: toggle
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            icon: mdi:alarm
+            badges:
+              - type: entity
+                entity: input_boolean.philips_alarm_daniel
+              - type: entity
+                entity: sensor.pixel_9_pro_next_alarm
+              - type: entity
+                entity: input_boolean.philips_alarm_anne
+            heading: Mit Wecker einschalten
+          - type: tile
+            entity: input_boolean.philips_alarm_daniel
+            tap_action:
+              action: toggle
+            name: Alarm2Coffee Daniel
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: tile
+            entity: input_boolean.philips_alarm_anne
+            tap_action:
+              action: toggle
+            name: Alarm2Coffee Anne
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: tile
+            entity: sensor.pixel_9_pro_next_alarm
+            grid_options:
+              columns: 12
+              rows: 2
+            name: Nächster Wecker Daniel
+            hide_state: false
+            show_entity_picture: false
+            vertical: true
+            state_content:
+              - state
+              - Local Time
+        column_span: 2
+  - title: Fuchsbau Energieerzeugung
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Fuchsbau Energeerzeugung
+          - graph: line
+            type: sensor
+            entity: sensor.powerstream_4932_inverter_output_watts
+            detail: 2
+            name: Einspeisung
+          - graph: line
+            type: sensor
+            entity: sensor.powerstream_4932_smart_plug_loads
+            detail: 2
+            name: SmartPlugs Verbrauch
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: entities
+            entities:
+              - entity: sensor.powerstream_4932_status
+                name: Status
+              - entity: sensor.powerstream_4932_inverter_on_off_status
+                name: Inverter On/Off Status
+              - entity: sensor.powerstream_4932_solar_1_watts
+                name: Solar 1 Watts
+              - entity: sensor.powerstream_4932_solar_2_watts
+                name: Solar 2 Watts
+              - entity: sensor.powerstream_4932_battery_input_watts
+                name: Battery Input Watts
+              - entity: sensor.powerstream_4932_other_loads
+                name: Other Loads
+              - entity: sensor.powerstream_4932_rated_power
+                name: Rated Power
+            title: Power Stream Solar
+            state_color: false
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Historie Fuchsbau Energieerzeugung
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.powerstream_4932_inverter_output_watts
+            stat_types:
+              - min
+              - max
+              - mean
+            title: Einspeisung
+    cards: []
+    type: sections
+    max_columns: 4
+    icon: mdi:solar-panel-large
+  - type: sections
+    max_columns: 4
+    title: Fernbedienung
+    path: fernbedienung
+    icon: mdi:remote-tv
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Viktoria
+            heading_style: title
+            icon: mdi:speaker
+          - type: tile
+            entity: automation.viktoria_an_aus
+            tap_action:
+              action: perform-action
+              perform_action: script.viktoria_on_off
+              target: {}
+            icon_tap_action:
+              action: perform-action
+              perform_action: script.viktoria_on_off
+              target: {}
+            name: On / Off
+            icon: mdi:power
+            vertical: false
+            hide_state: true
+´
