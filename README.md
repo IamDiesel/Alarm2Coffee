@@ -28,6 +28,7 @@ Components used:
 - deactivate mac address randomisation:
   - sudo nano /etc/NetworkManager/conf.d/100-disable-wifi-mac-randomization.conf
   - Content:
+
 ```
 [connection]
 wifi.mac-address-randomization=1
@@ -35,18 +36,22 @@ wifi.mac-address-randomization=1
 wifi.scan-rand-mac-address=no
 )
 ```
+
 - install docker & add user:
+- 
 ´´´
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 docker –version
 sudo usermod -aG docker <user>
 ´´´
+
 - Download OS-Agent on raspberry pi: wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
 - install: sudo dpkg -i os-agent_1.6.0_linux_aarch64.deb
 
 - install additional dependencies:
-´´´
+
+~~~
 sudo apt install \
 apparmor \
 bluez \
@@ -62,7 +67,8 @@ systemd-journal-remote \
 systemd-resolved \
 udisks2 \
 wget -y
-´´´
+~~~
+
 - install home assistant superviced (https://github.com/home-assistant/supervised-installer/releases/download/2.0.0/homeassistant-supervised.deb)
   - sudo dpkg -i homeassistant-supervised.deb
   - during installation: choose raspberrypi5-64
@@ -72,20 +78,26 @@ wget -y
 - Show home assistant on startup on the 7" display:
   - configure autostart: sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
     - add the following lines:
-´´´
+      
+~~~
 @unclutter
 @xset s off
 @xset -dpms
 @xset s noblank
 @chromium-browser --noerrdialogs --check-for-update-interval=31536000 --disable-infobars --kiosk http://127.0.0.1:8123/
-´´´
+~~~
+
   - activate autologin on pi
-´´´
+
+~~~
 cd /usr/share/hassio/homeassistant/
 sudo nano configuration.yaml
-´´´
+~~~
+
   - add the following lines
-´´´
+    
+~~~
+
 homeassistant:
   auth_providers:
     - type: homeassistant
@@ -97,15 +109,17 @@ homeassistant:
         127.0.0.1: 6a24b8e59e2c45328cd1s97ds0b71221  # Map the IP address to the user ID
         192.168.2.43: 6a24b8249e22445x1cd1797123471221  # Map the IP address to the user ID
       allow_bypass_login: true
-   ´´´   
+  ~~~
+  
 - install 7inch display (https://wiki.luckfox.com/):
   - sudo nano /boot/config.txt
   - add the following lines:
  
-´´´
+~~~
 dtoverlay=vc4-kms-v3d
 dtoverlay=vc4-kms-dsi-7inch
-´´´
+~~~
+
 ### configure home assistant ###
 ## Create entities (German) ##
 Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
@@ -122,9 +136,11 @@ Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
 - Create automation: „Einstellungen“->“Automatisierung & Szenen“->“Automatisierung erstellen““Neue Automatisierung“
   - Auslöser hinzufügen: “Andere Auslöser“-->“Template“
   - Template code:
-    ´´´
+  
+   ~~~
     {{(now()+timedelta(0,60)).strftime('%a %h %d %H:%M %Z %Y') == (((state_attr('sensor.pixel_9_pro_next_alarm', 'Time in Milliseconds') | int / 1000) ) | timestamp_custom('%a %h %d %H:%M %Z %Y'))}}
-    ´´´
+   ~~~
+   
   - add action:
 ![image](https://github.com/user-attachments/assets/566ee146-ef02-4c4b-a345-3907a6c4f3d8)
 
@@ -161,15 +177,15 @@ The state of the coffeemachine ist sent from the mainboard to the display. The b
 
 # On / Off #
 
-´´´
+~~~
 On / Off Beep: d5 55 0a 00 00 03 02 00 00 00 32 25
 Power on without cleaning cycle: d5 55 01 00 00 03 02 00 00 00 19 10	
 Power Off no Cleaning cycle?: d5550000000302010000210c
-´´´
+~~~
 
 # Drink Selection: # 
 
-´´´
+~~~
 Select Nothing: 		d5 55 00 00 00 03 02 00 00 00 2d 01
 Select Espresso:	d5 55 00 00 00 03 02 02 00 00 35 1a 	Nachricht wird 13x gesendet
 perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
@@ -177,18 +193,18 @@ perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
 Hot Water:		d5 55 00 00 00 03 02 04 00 00 1d 36
 Select Coffee:		d5 55 00 00 00 03 02 08 00 00 05 2b	Nachricht wird 8x gesendet
 Steam:			d5 55 00 00 00 03 02 10 00 00 35 11	Nachricht wird 32x gesendet
-´´´
+~~~
 
 # Settings: #
 
-´´´
+~~~
 
 d5 55 00 00 00 03 02 00 02 00 35 18	Bean Size
 d5 55 00 00 00 03 02 00 04 00 1c 32	Coffee Size
 Play:
 d5 55 00 00 00 03 02 00 00 01 25 05 	Play-Button (espresso, 39x)
 perl -e 'print pack "H*", "d55500000003020000012505"' > /dev/ttyUSB2
-´´´
+~~~
 
 For both mainboard messages and display messages the CRC algorithm is currently unknown. So it might be necessary to record the messages individually.
 
@@ -233,7 +249,7 @@ Add the following lines via "sudo nano /boot/config.txt":
 sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philips_pi/Philips_2200.py > /home/fuchsi/Documents/philips_pi/alarm2coffee.log 2>&1' &
 - Also a dashboard can be created in order to interact with the coffeemachine via smartphone. Here is mine:
 
-´´´
+~~~
 
 views:
   - type: sections
@@ -454,4 +470,4 @@ views:
             vertical: false
             hide_state: true
             
-´´´
+~~~
