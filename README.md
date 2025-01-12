@@ -36,7 +36,7 @@ wifi.scan-rand-mac-address=no
 )
 ```
 - install docker & add user:
-  ´´´
+´´´
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 docker –version
@@ -138,6 +138,41 @@ Now the companion app focus sensor of the iOS device can be used to trigger auto
 ![image](https://github.com/user-attachments/assets/251a9fb4-3a34-449d-9c30-0792378ff227)
 ![image](https://github.com/user-attachments/assets/eac863b2-9854-4228-8236-fb4d34a07f53)
 ![image](https://github.com/user-attachments/assets/31d42838-ae8a-4857-8097-fc2410e5e0dc)
+
+### Disassemble coffee machine ###
+The coffee machine's display can be disassembled using a plastic tool.
+![image](https://github.com/user-attachments/assets/7165692b-b229-4711-93ef-43abf203967e)
+The wiring between display and mainboard is as follows:
+![image](https://github.com/user-attachments/assets/979c58ba-b3b3-43a2-ae99-369fd36aa86d)
+Communication is run via UART @115200
+The state of the coffeemachine ist sent from the mainboard to the display. The button events are sent from the display to the mainboard.
+## Mainboard -> Display
+![image](https://github.com/user-attachments/assets/1ac3123b-a995-4a80-84e9-cca3d36cf012)
+## Display -> Mainboard
+![image](https://github.com/user-attachments/assets/b3d6cad4-577e-4da2-b39c-02a41aa92d71)
+# On / Off #
+On / Off Beep: d5 55 0a 00 00 03 02 00 00 00 32 25
+Power on without cleaning cycle: d5 55 01 00 00 03 02 00 00 00 19 10	
+Power Off no Cleaning cycle?: d5550000000302010000210c
+# Drink Selection: # 
+Select Nothing: 		d5 55 00 00 00 03 02 00 00 00 2d 01
+Select Espresso:	d5 55 00 00 00 03 02 02 00 00 35 1a 	Nachricht wird 13x gesendet
+perl -e 'print pack "H*", "d5550000000302020000351a"' > /dev/ttyUSB2
+
+Hot Water:		d5 55 00 00 00 03 02 04 00 00 1d 36
+Select Coffee:		d5 55 00 00 00 03 02 08 00 00 05 2b	Nachricht wird 8x gesendet
+Steam:			d5 55 00 00 00 03 02 10 00 00 35 11	Nachricht wird 32x gesendet
+
+# Settings: #
+d5 55 00 00 00 03 02 00 02 00 35 18	Bean Size
+d5 55 00 00 00 03 02 00 04 00 1c 32	Coffee Size
+Play:
+d5 55 00 00 00 03 02 00 00 01 25 05 	Play-Button (espresso, 39x)
+perl -e 'print pack "H*", "d55500000003020000012505"' > /dev/ttyUSB2
+
+For both mainboard messages and display messages the CRC algorithm is currently unknown. So it might be necessary to record the messages individually.
+
+### Connect relais, UART and power ###
 
 
 ![image](https://github.com/user-attachments/assets/6edd467b-ddb7-4753-a80a-c2255f193521)
