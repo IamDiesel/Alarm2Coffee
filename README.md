@@ -391,7 +391,12 @@ sections:
         state_content:
           - state
           - Local Time
-    column_span: 2
-
-            
+    column_span: 2       
 ~~~
+
+# TODOs #
+- [ ] Create relay-circuit-board to avoid messy wiring (also 3 relays are unused)
+- [ ] Refactor python software
+  - [ ] check for HAss availability on startup
+  - [ ] refactor SW components (file / component is too big)
+  - [ ] further evaluate power cycle code
