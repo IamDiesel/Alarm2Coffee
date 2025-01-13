@@ -1,13 +1,13 @@
-### Power on Philips 2200 Coffeemachine on smartphone-alarm via Raspberry Pi and Home-Assistant ###
+# Power on Philips 2200 Coffeemachine on smartphone-alarm via Raspberry Pi and Home-Assistant #
 ![image](https://github.com/user-attachments/assets/1eeee930-636a-45a1-ab63-98c0c5c57c0b)
 
-
+### Requirements: ###
 - Coffee-Machine: Philips 2200
 - MITM (inject & passthrough): Inject coffee selection commands and read current coffee configuration
 - Use home assistant for automation and hub to the smartphone alarm
 - Additional Fail-Safe mechanism in case RPi is dead and  the MITM configuration must be bridged
 
-Components used:
+### Components used: ###
 - Raspberry Pi5 + SD Card
 - PicoFlex 90325-0008 socket
 - Molex 92315-0815, Picoflex, ribbon cable 150mm
@@ -15,7 +15,7 @@ Components used:
 - LUCKFOX DSI Capacitive 7 inch Touch Screen with Case
 - Jumper Wire / cables / glue / screws / ...
 
-### Install home assistant on Raspberry Pi 5 ###
+## Install home assistant on Raspberry Pi 5 ##
 - Use Pi Imager to flash SD card (see https://developbyter.com/home-assistant-auf-raspberry-pi-installieren-und-einrichten/) 
 - create empty file called "ssh" on sd card "bootfs"
 - tell router to give RPi a constant IP address
@@ -38,7 +38,7 @@ wifi.scan-rand-mac-address=no
 ~~~
 
 - install docker & add user:
-- 
+  
 ~~~
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
@@ -120,14 +120,14 @@ dtoverlay=vc4-kms-v3d
 dtoverlay=vc4-kms-dsi-7inch
 ~~~
 
-### configure home assistant ###
-## Create entities (German) ##
+## configure home assistant ##
+### Create entities (German) ###
 Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
 ![image](https://github.com/user-attachments/assets/92806d0c-d983-4e49-8316-0e5e1caac7e1)
 ![image](https://github.com/user-attachments/assets/e3ebc246-aa10-4801-9fed-4610fc1dc235)
 ![image](https://github.com/user-attachments/assets/1ed82db4-cce8-4a71-af64-9677af77bd7e)
 
-## setup alarm (Android) ##
+### setup alarm (Android) ###
 - Open the Home Assistant App menu and select Settings
 - Go to Companion App
 - Select Manage Sensors
@@ -144,18 +144,25 @@ Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
   - add action:
 ![image](https://github.com/user-attachments/assets/566ee146-ef02-4c4b-a345-3907a6c4f3d8)
 
-## setup alarm (iOs) ##
+### setup alarm (iOs) ###
 The focus sensor can be used to determine when the alarm went off.
 - Create iOS shortcut named "HAss focus": deactivate focus
 - Create iOS automation that executes the "Hass focus" everytime an alarm goes off
 Now the companion app focus sensor of the iOS device can be used to trigger automations in Home-Assistant
 - Create Home-Assistant automation:
-![image](https://github.com/user-attachments/assets/f4baeaf1-41d1-4444-a85e-a35bb300ae05)
-![image](https://github.com/user-attachments/assets/251a9fb4-3a34-449d-9c30-0792378ff227)
-![image](https://github.com/user-attachments/assets/eac863b2-9854-4228-8236-fb4d34a07f53)
-![image](https://github.com/user-attachments/assets/31d42838-ae8a-4857-8097-fc2410e5e0dc)
 
-### Disassemble coffee machine ###
+![image](https://github.com/user-attachments/assets/bb681be1-8a9e-4375-8cdb-12aed913797a)
+
+![image](https://github.com/user-attachments/assets/0a2a4f7c-f723-4d27-8df9-fd5c5656f9df)
+
+![image](https://github.com/user-attachments/assets/c0ceffa0-9dc2-470c-9584-a363801bf383)
+
+![image](https://github.com/user-attachments/assets/dd475ab2-37b0-4ae8-aaf6-07f92ecdaf46)
+
+
+
+
+# Disassemble coffee machine #
 The coffee machine's display can be disassembled using a plastic tool.
 
 ![image](https://github.com/user-attachments/assets/7165692b-b229-4711-93ef-43abf203967e)
@@ -167,6 +174,7 @@ The wiring between display and mainboard is as follows:
 Communication is run via UART @115200
 The state of the coffeemachine ist sent from the mainboard to the display. The button events are sent from the display to the mainboard.
 
+# Communication #
 ## Mainboard -> Display
 
 ![image](https://github.com/user-attachments/assets/1ac3123b-a995-4a80-84e9-cca3d36cf012)
@@ -175,7 +183,7 @@ The state of the coffeemachine ist sent from the mainboard to the display. The b
 
 ![image](https://github.com/user-attachments/assets/b3d6cad4-577e-4da2-b39c-02a41aa92d71)
 
-# On / Off #
+### On / Off ###
 
 ~~~
 On / Off Beep: d5 55 0a 00 00 03 02 00 00 00 32 25
@@ -183,7 +191,7 @@ Power on without cleaning cycle: d5 55 01 00 00 03 02 00 00 00 19 10
 Power Off no Cleaning cycle?: d5550000000302010000210c
 ~~~
 
-# Drink Selection: # 
+### Drink Selection: ###
 
 ~~~
 Select Nothing: 		d5 55 00 00 00 03 02 00 00 00 2d 01
@@ -195,7 +203,7 @@ Select Coffee:		d5 55 00 00 00 03 02 08 00 00 05 2b	Nachricht wird 8x gesendet
 Steam:			d5 55 00 00 00 03 02 10 00 00 35 11	Nachricht wird 32x gesendet
 ~~~
 
-# Settings: #
+### Settings: ###
 
 ~~~
 
@@ -208,7 +216,7 @@ perl -e 'print pack "H*", "d55500000003020000012505"' > /dev/ttyUSB2
 
 For both mainboard messages and display messages the CRC algorithm is currently unknown. So it might be necessary to record the messages individually.
 
-### Connect relais, UART and power ###
+## Connect relais, UART and power ##
 
 The relayboard 1 is used as a failsafe when the pi does not power on. In that case the UART connection will be set directly between display and mainboard. When the relay is activated the raspberry pi act as MITM.
 Relayboard 2 is used to reset the display when activated via power on command incection. A power cycle will activate the display.
@@ -216,7 +224,7 @@ Here is the connection diagram:
 
 ![image](https://github.com/user-attachments/assets/06c0d2ef-7039-492d-913c-45ca3747fa98)
 
-### Activate UART2/3 and GPIO on RPi5 & ### 
+## Activate UART2/3 and GPIO on RPi5 & ## 
 
 Add the following lines via "sudo nano /boot/config.txt":
 
@@ -230,8 +238,7 @@ Add the following lines via "sudo nano /boot/config.txt":
 - In order to use GPIO on RPi5 another package is required: .coffee/bin/pip install rpi-lgpio
 - It could be necessary to uninstall the RPi GPIO first: .coffee/bin/pip uninstall Rpi.GPIO
 
-
-### Setup Home Assistant API / install the required pyhton packages ###
+## Setup Home Assistant API / install the required python packages ##
 
 - Create a longliving HAss token in HAss: Profil->Sicherheit
   - safe this token in a file called "HASS_Token.py" with: token = "asdjalksdjkasjdklasjd your token asdlkalösdkaölsd"
@@ -239,7 +246,7 @@ Add the following lines via "sudo nano /boot/config.txt":
 - install Home assistant: .coffee/bin/pip install homeassistant_api
 - install pyserial: .coffee/bin/pip install pyserial
 
-### Finish ###
+## Finish ##
 
 ![WhatsApp Bild 2025-01-12 um 21 23 38_4eb5911e](https://github.com/user-attachments/assets/73a34edb-14ac-4d31-bebd-994a65028bc4)
 
