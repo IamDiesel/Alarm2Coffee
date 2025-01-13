@@ -220,8 +220,8 @@ For both mainboard messages and display messages the CRC algorithm is currently 
 
 ## Connect relais, UART and power ##
 
-The relayboard 1 is used as a failsafe when the pi does not power on. In that case the UART connection will be set directly between display and mainboard. When the relay is activated the raspberry pi act as MITM.
-Relayboard 2 is used to reset the display when activated via power on command incection. A power cycle will activate the display.
+The relayboard 1 is used as a failsafe when the pi does not power on. In that case the UART connection will be without the MITM and therby the mainboard is directly connected to the display. When the relay is activated the raspberry pi acts as MITM between mainboard and display.
+Relayboard 2 is used to reset the display when activated via power on command incection. A power cycle will activate the display. This relay is also failsafe for the case, that RPi is powered off, since Display GND is connected to the Relay-Normally-Closed Pin and Relay-Common is connected to the Mainboard GND.
 Here is the connection diagram:
 
 ![image](https://github.com/user-attachments/assets/06c0d2ef-7039-492d-913c-45ca3747fa98)
@@ -253,7 +253,7 @@ As a result the GPIO configuration will be as follows:
 
 ![WhatsApp Bild 2025-01-12 um 21 23 38_4eb5911e](https://github.com/user-attachments/assets/73a34edb-14ac-4d31-bebd-994a65028bc4)
 
-- Thats it. Now run Philips_2200.py and the RPI will inject the respective display commands, when the respective Home Assistant buttons are pushed. In Addition a alarm will trigger a power on command sent to the coffee machine.
+- Thats it. Now run Philips_2200.py and the RPI will inject the respective display commands, when the respective Home Assistant buttons are pushed. If no button is pushed, the RPi will forward all messages from display to mainboard and vice versa. In Addition a alarm will trigger a power on command sent to the coffee machine.
 - the relay boards fit nicely behind the display. I glued screws on the backside of the display module in order to fit the relay boards to the display.
 - In order to run the python script on startup the following lines can be added to rc.local via sudo nano /etc/rc.local:
 sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philips_pi/Philips_2200.py > /home/fuchsi/Documents/philips_pi/alarm2coffee.log 2>&1' &
