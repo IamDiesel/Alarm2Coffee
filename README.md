@@ -1,5 +1,6 @@
 # Power on Philips 2200 Coffeemachine on smartphone-alarm via Raspberry Pi and Home-Assistant #
-![image](https://github.com/user-attachments/assets/1eeee930-636a-45a1-ab63-98c0c5c57c0b)
+![image](https://github.com/user-attachments/assets/e021abc0-e370-4a56-92f0-08992edfb9e1)
+
 
 ### Requirements: ###
 - Coffee-Machine: Philips 2200
@@ -125,7 +126,9 @@ dtoverlay=vc4-kms-dsi-7inch
 Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
 ![image](https://github.com/user-attachments/assets/92806d0c-d983-4e49-8316-0e5e1caac7e1)
 ![image](https://github.com/user-attachments/assets/e3ebc246-aa10-4801-9fed-4610fc1dc235)
-![image](https://github.com/user-attachments/assets/1ed82db4-cce8-4a71-af64-9677af77bd7e)
+![image](https://github.com/user-attachments/assets/12c1caa5-effe-4827-9b6d-f86677d2f4a4)
+
+
 
 ### setup alarm (Android) ###
 - Open the Home Assistant App menu and select Settings
@@ -151,11 +154,9 @@ The focus sensor can be used to determine when the alarm went off.
 Now the companion app focus sensor of the iOS device can be used to trigger automations in Home-Assistant
 - Create Home-Assistant automation:
 
-![image](https://github.com/user-attachments/assets/bb681be1-8a9e-4375-8cdb-12aed913797a)
+![image](https://github.com/user-attachments/assets/62c23ed9-9666-426c-ba18-ccbea7c168bc)
 
 ![image](https://github.com/user-attachments/assets/0a2a4f7c-f723-4d27-8df9-fd5c5656f9df)
-
-![image](https://github.com/user-attachments/assets/c0ceffa0-9dc2-470c-9584-a363801bf383)
 
 ![image](https://github.com/user-attachments/assets/dd475ab2-37b0-4ae8-aaf6-07f92ecdaf46)
 
@@ -230,6 +231,7 @@ Add the following lines via "sudo nano /boot/config.txt":
 
 ![image](https://github.com/user-attachments/assets/f6b4094f-8aa5-4367-96f9-00942d288cfb)
 
+As a result the GPIO configuration will be as follows:
 - ttyAMA2	Display	Pin 7 (GPIO 4)	TX
 - ttyAMA2	Display	Pin 29 (GPIO 5)	RX
 - ttyAMA3	Mainboard	Pin 24 (GPIO 8)	TX
@@ -361,7 +363,7 @@ sections:
           - type: entity
             entity: sensor.pixel_9_pro_next_alarm
           - type: entity
-            entity: input_boolean.philips_alarm_anne
+            entity: input_boolean.philips_alarm_
         heading: Mit Wecker einschalten
       - type: tile
         entity: input_boolean.philips_alarm_daniel
@@ -372,10 +374,10 @@ sections:
           columns: 12
           rows: 1
       - type: tile
-        entity: input_boolean.philips_alarm_anne
+        entity: input_boolean.philips_alarm_
         tap_action:
           action: toggle
-        name: Alarm2Coffee Anne
+        name: Alarm2Coffee 
         grid_options:
           columns: 12
           rows: 1
