@@ -29,22 +29,22 @@ Components used:
   - sudo nano /etc/NetworkManager/conf.d/100-disable-wifi-mac-randomization.conf
   - Content:
 
-```
+~~~
 [connection]
 wifi.mac-address-randomization=1
 [device]
 wifi.scan-rand-mac-address=no
 )
-```
+~~~
 
 - install docker & add user:
 - 
-´´´
+~~~
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 docker –version
 sudo usermod -aG docker <user>
-´´´
+~~~
 
 - Download OS-Agent on raspberry pi: wget https://github.com/home-assistant/os-agent/releases/download/1.6.0/os-agent_1.6.0_linux_aarch64.deb
 - install: sudo dpkg -i os-agent_1.6.0_linux_aarch64.deb
