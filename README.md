@@ -403,3 +403,6 @@ sections:
   - [ ] check for HAss availability on startup
   - [ ] refactor SW components (file / component is too big)
   - [ ] further evaluate power cycle code
+  - [ ] Read coffee strength and display this information in home assistant
+  - [ ] Read cup size and display this information in home assistant
+  - [ ] Read 1x / 2x and drink selection information and display this information in home assistant
