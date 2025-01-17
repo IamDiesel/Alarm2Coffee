@@ -97,8 +97,17 @@ class Philips_2200:
         GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.LOW)  # PWR Display Off, GND not connected
         time.sleep(t_off)
         GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # PWR Display On, GND connected
+        #time.sleep(t_off)
 
-    # display commands (display->mainboard):
+
+
+        #time.sleep(t_off) #double power on with 0.28 works
+        #print("toggle finished")
+    
+
+        
+
+    # display commands (display->mainboard:
 
     def forward_mainboard_to_display_update_hass(self):
         if (self.dev_mainboard.inWaiting() >= 19):
@@ -168,9 +177,11 @@ class Philips_2200:
                 print("No response from Mainboard to power on message")
                 break
         print(count)
+        #time.sleep(1)
         count_iter = 0
         count_disp_msg = 0
         count_main_msg = 0
+        #time.sleep(1)
         while(True):
             count_iter +=1   
             time.sleep(0.5)
@@ -197,10 +208,27 @@ class Philips_2200:
             count_disp_msg = 0
             count_main_msg = 0
             print("Waiting for disp")
+            
+        #print(f'"Count:               {count}')
+        #for i in range(170):
+            #self.dev_display.write(cmd_power_on)
+            
+        #power cycle display
+        #self.__relais_pwr_toggle(0.485) #0.28 (twice),0.47 (1-2mal) 0.48 (1,x mal) 0.5 (1-2mal), 0.51 (1-2mal), 0.52 (1-3mal)
+        
+        
+        #time.sleep(0.05)
+        #time.sleep(0.1)
+        #forward message from mainboard to display
+        #self.forward_mainboard_to_display_update_hass()
+  
 
     '''TODO implement cmd routines
-    #1) instead of waiting 60s for HAss to boot, check weather HAss is online and sleep for x secs if not online then try again
-    #2) refactor
+    -DONE power_off_no_clean_cmd_routine
+    -power_off_clean_cmd_routine
+    -power_on_clean_cmd_routine
+    -DONE select_bean_cmd_routine
+    -DONE select_cup_cmd_routine
     '''
 
     class HASS_Helper:
@@ -218,6 +246,10 @@ class Philips_2200:
             entity = client.get_entity(entity_id=entity_id) #session is closed after this call
             return entity.get_state().state
 
+    #class Machine_State:
+
+        
+    
     def getSerialDeviceBySerialnumber(self, serialnumber):
         device = None
         for i in range(10):
