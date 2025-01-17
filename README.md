@@ -94,6 +94,7 @@ wget -y
 @unclutter
 @xset s off
 @xset -dpms
+@xset s 300 300
 @xset s blank
 @chromium-browser --noerrdialogs --check-for-update-interval=31536000 --disable-infobars --kiosk http://127.0.0.1:8123/
 ~~~
