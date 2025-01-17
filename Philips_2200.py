@@ -6,10 +6,12 @@ import sys
 from HASS_Token import token
 import RPi.GPIO as GPIO
 import time
+from threading import Thread
+from Reset_Wifi import Wifi_Deamon
 
 printSerial = False
 
-class Philips_2200:
+class Philips_2200(Thread):
     def __init__(self,persistant_HASS_token, sn_serial_main=None, sn_serial_disp=None):
 
         GPIO.setmode(GPIO.BCM)  # GPIO Nummern statt Board Nummern
@@ -53,12 +55,13 @@ class Philips_2200:
         self.__init_relais()
         self.__relais_on()
         
-        self.running = False
+        self._running = False
         
         #helper for reading and setting HASS entities
         self.hass_helper = self.HASS_Helper(self.persistant_HASS_token)
         #if a button was pressed inside HASS, this variable will be set to the corresponding display serial command
         self.next_cmd = None
+        super(Philips_2200, self).__init__()
 
         #TODO enable relais for intercepting TX/RX
 
@@ -98,14 +101,6 @@ class Philips_2200:
         time.sleep(t_off)
         GPIO.output(self.RELAIS_PWR_DISP_GPIO, GPIO.HIGH)  # PWR Display On, GND connected
         #time.sleep(t_off)
-
-
-
-        #time.sleep(t_off) #double power on with 0.28 works
-        #print("toggle finished")
-    
-
-        
 
     # display commands (display->mainboard:
 
@@ -208,20 +203,7 @@ class Philips_2200:
             count_disp_msg = 0
             count_main_msg = 0
             print("Waiting for disp")
-            
-        #print(f'"Count:               {count}')
-        #for i in range(170):
-            #self.dev_display.write(cmd_power_on)
-            
-        #power cycle display
-        #self.__relais_pwr_toggle(0.485) #0.28 (twice),0.47 (1-2mal) 0.48 (1,x mal) 0.5 (1-2mal), 0.51 (1-2mal), 0.52 (1-3mal)
-        
-        
-        #time.sleep(0.05)
-        #time.sleep(0.1)
-        #forward message from mainboard to display
-        #self.forward_mainboard_to_display_update_hass()
-  
+
 
     '''TODO implement cmd routines
     -DONE power_off_no_clean_cmd_routine
@@ -246,10 +228,6 @@ class Philips_2200:
             entity = client.get_entity(entity_id=entity_id) #session is closed after this call
             return entity.get_state().state
 
-    #class Machine_State:
-
-        
-    
     def getSerialDeviceBySerialnumber(self, serialnumber):
         device = None
         for i in range(10):
@@ -266,7 +244,6 @@ class Philips_2200:
                 #print(result)
                 continue
         return device
-    
 
     def update_HASS_LED(self,input):
         try:
@@ -348,9 +325,9 @@ class Philips_2200:
             self.__relais_off()
 
     def run(self):
-        self.running = True
+        self._running = True
         i = 0
-        while (self.running):
+        while (self._running):
             try:
                 while (self.dev_display.inWaiting() > 0): #if there is data from display, wait until startbit is received                  
                     if (self.dev_display.read(1) == b'\xd5'):
@@ -391,15 +368,23 @@ class Philips_2200:
                 pass
             except Exception as e:
                 self.__relais_off()
-                print(str(type(e)) + e.message)
+                print(str(type(e)),e)
                 
 if __name__ == '__main__':
     #sn_mainboard = "0001"
     #sn_display = "TGLBK1NM"
-    coffee = Philips_2200(token)
+
     try:
         time.sleep(60)
-        coffee.run()
-    except Exception:
+        coffee = Philips_2200(token)
+        coffee_thread = Thread(target = coffee.run)
+        wifi = Wifi_Deamon("192.168.2.1")
+        wifi_thread = Thread(target=wifi.run)
+        wifi_thread.start()
+        coffee_thread.start()
+        wifi_thread.join()
+        coffee_thread.join()
+    except Exception as e:
+        print("Exception Main thread: ",e)
         coffee.__relais_off()
 
