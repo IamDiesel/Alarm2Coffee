@@ -1,5 +1,5 @@
 import os
-from homeassistant_api import Client, State
+from homeassistant_api import Client, State, errors
 import serial
 import subprocess
 import sys
@@ -57,7 +57,7 @@ class Philips_2200(Thread):
         
         self._running = False
         
-        #helper for reading and setting HASS entities
+        #helper for reading and setting HASS entities, blocks program until HAss is online
         self.hass_helper = self.HASS_Helper(self.persistant_HASS_token)
         #if a button was pressed inside HASS, this variable will be set to the corresponding display serial command
         self.next_cmd = None
@@ -218,6 +218,23 @@ class Philips_2200(Thread):
         def __init__(self, persistant_HASS_token):
             self.persistant_HASS_token = persistant_HASS_token
             self.URL = "http://localhost:8123/api"
+            self.wait_for_api()
+            
+        def wait_for_api(self):
+            exception_thrown = True
+            while(exception_thrown):
+                try:
+                    self.get_entity_state("binary_sensor.rpi_power_status")
+                    exception_thrown = False
+                    time.sleep(15)
+                except errors.EndpointNotFoundError:
+                    time.sleep(15)
+                    print("Waiting for API")
+                    continue
+                except Exception:
+                    time.sleep(15)
+                    print("Waiting for API")
+                    continue
         
         def set_entity_state(self,entity_id, value):
             client = Client(self.URL, self.persistant_HASS_token)
@@ -375,13 +392,14 @@ if __name__ == '__main__':
     #sn_display = "TGLBK1NM"
 
     try:
-        time.sleep(60)
+        #time.sleep(90)
+        #Philips_2200 init method blocks the program until HAss is online
         coffee = Philips_2200(token)
         coffee_thread = Thread(target = coffee.run)
         wifi = Wifi_Deamon("192.168.2.1")
-        wifi_thread = Thread(target=wifi.run)
-        wifi_thread.start()
+        wifi_thread = Thread(target=wifi.run)        
         coffee_thread.start()
+        wifi_thread.start()
         wifi_thread.join()
         coffee_thread.join()
     except Exception as e:
