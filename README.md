@@ -407,3 +407,6 @@ sections:
   - [ ] Read coffee strength and display this information in home assistant
   - [ ] Read cup size and display this information in home assistant
   - [ ] Read 1x / 2x and drink selection information and display this information in home assistant
+  - [ ] Check Home Assistant loosing WIFI connection to home net
+    - [ ] Write script to reset wifi when loosing connection to gateway
+    - [ ] evaluate power settings
