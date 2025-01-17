@@ -89,6 +89,15 @@ wget -y
 @xset s noblank
 @chromium-browser --noerrdialogs --check-for-update-interval=31536000 --disable-infobars --kiosk http://127.0.0.1:8123/
 ~~~
+  if you want to keep a 5min display off timer, use the following settings:
+~~~
+@unclutter
+@xset s off
+@xset -dpms
+@xset s blank
+@chromium-browser --noerrdialogs --check-for-update-interval=31536000 --disable-infobars --kiosk http://127.0.0.1:8123/
+~~~
+
 
   - activate autologin on pi
 
@@ -408,12 +417,12 @@ sections:
 # TODOs #
 - [ ] Create relay-circuit-board to avoid messy wiring (also 3 relays are unused)
 - [ ] Refactor python software
-  - [ ] check for HAss availability on startup
+  - [x] check for HAss availability on startup
   - [ ] refactor SW components (file / component is too big)
   - [ ] further evaluate power cycle code
   - [ ] Read coffee strength and display this information in home assistant
   - [ ] Read cup size and display this information in home assistant
   - [ ] Read 1x / 2x and drink selection information and display this information in home assistant
-  - [ ] Check Home Assistant loosing WIFI connection to home net
-    - [ ] Write script to reset wifi when loosing connection to gateway
-    - [ x ] evaluate power settings
+  - [x] Check Home Assistant loosing WIFI connection to home net
+    - [x] Write script to reset wifi when loosing connection to gateway
+    - [x] evaluate power settings
