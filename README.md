@@ -250,6 +250,10 @@ As a result the GPIO configuration will be as follows:
 - install Home assistant: .coffee/bin/pip install homeassistant_api
 - install pyserial: .coffee/bin/pip install pyserial
 
+## Home Assistant WIFI Stability Issues ##
+Home Assistant started beeing offline from time to time. Where the device was not reachable via ssh or the home assistant app.
+The only thing that seemed to help was a wifi reset. So I wrote a little script that (e.g.) pings the local router. In case the router is not reachable the script will reset wifi, making the HAss available again.
+
 ## Finish ##
 
 ![WhatsApp Bild 2025-01-12 um 21 23 38_4eb5911e](https://github.com/user-attachments/assets/73a34edb-14ac-4d31-bebd-994a65028bc4)
@@ -257,7 +261,10 @@ As a result the GPIO configuration will be as follows:
 - Thats it. Now run Philips_2200.py and the RPI will inject the respective display commands, when the respective Home Assistant buttons are pushed. If no button is pushed, the RPi will forward all messages from display to mainboard and vice versa. In Addition a alarm will trigger a power on command sent to the coffee machine.
 - the relay boards fit nicely behind the display. I glued screws on the backside of the display module in order to fit the relay boards to the display.
 - In order to run the python script on startup the following lines can be added to rc.local via sudo nano /etc/rc.local:
+~~~
 sudo bash -c '/home/youruser/.coffee/bin/python3 /home/youruser/Documents/philips_pi/Philips_2200.py > /home/fuchsi/Documents/philips_pi/alarm2coffee.log 2>&1' &
+~~~
+Of course the path must be set to your local Philips_2200.py. In addition Wifi_Reset.py must be in the same folder as Philips_2200.py.
 - Also a dashboard can be created in order to interact with the coffeemachine via smartphone. Here is mine:
 
 ~~~
@@ -409,4 +416,4 @@ sections:
   - [ ] Read 1x / 2x and drink selection information and display this information in home assistant
   - [ ] Check Home Assistant loosing WIFI connection to home net
     - [ ] Write script to reset wifi when loosing connection to gateway
-    - [ ] evaluate power settings
+    - [ x ] evaluate power settings
