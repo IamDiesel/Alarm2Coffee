@@ -7,6 +7,9 @@ class Wifi_Deamon(Thread):
         self.gateway_ip = gateway_ip
         self._running = False
         super(Wifi_Deamon, self).__init__()
+        #disable wlan powermanagment
+        self.interface = self.get_interface()
+        self.shell_command(f"sudo iwconfig {self.interface} power off")
         
     def run(self):
         self._running = True
@@ -49,14 +52,14 @@ class Wifi_Deamon(Thread):
         return interface
 
     def ip_link_up(self):
-        print(self.shell_command(f"sudo ip link set {self.get_interface()} up"))
+        print(self.shell_command(f"sudo ip link set {self.interface} up"))
         
     def ip_link_down(self):
-        print(self.shell_command(f"sudo ip link set {self.get_interface()} down"))
+        print(self.shell_command(f"sudo ip link set {self.interface} down"))
 
     def reset_WLAN(self):
         self.ip_link_down()
-        time.sleep(10)
+        time.sleep(15)
         self.ip_link_up()
     
 if __name__ == '__main__':

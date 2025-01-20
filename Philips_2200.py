@@ -34,7 +34,7 @@ class Philips_2200(Thread):
         self.sizeLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED', 0x07: 'TopLED'}
         self.sizeAquaLEDStates = {0x00: 'Off', 0x07:'Show LED Group',0x38:'Aqua Clean Orange'}
         self.calcCleanLEDStates = {0x00: 'Both Off', 0x38:'Calc / Clean orange', 0x07:'unknown'}
-        self.emptyWaterLEDStates = {0x00: 'No error', 0x38:'Water emtpy'}
+        self.emptyWaterLEDStates = {0x00: 'No error', 0x38:'Water empty'}
         self.wasteWarningLEDStates = {0x00: 'No error', 0x07:'Waste full', 0x38:'Error active'}
         self.playPauseLEDStates = {0x00:'Off', 0x07:'On'}
         
@@ -264,31 +264,100 @@ class Philips_2200(Thread):
 
     def update_HASS_LED(self,input):
         try:
-            #resParsed += protocolNames[i] + "[" + protocol[i][int(hexByte,0)] + "]"+" "
             #espresso LED
             rd_led_state ='on'
             if(self.protocol[3][int(hex(input[3]),0)] == 'Off'):
                 rd_led_state = 'off'
+            elif(self.protocol[3][int(hex(input[3]),0)] == 'Double'):
+                self.hass_helper.set_entity_state('input_boolean.philips_double_espresso_led','on')
+            else:
+                self.hass_helper.set_entity_state('input_boolean.philips_double_espresso_led','off')
             self.hass_helper.set_entity_state('input_boolean.philips_mainboard_espresso_led',rd_led_state)
-            #hass.states.set('input_boolean.philips_mainboard_espresso_led',rd_led_state)
+            
             #hot water
             rd_led_state ='on'
             if(self.protocol[4][int(hex(input[4]),0)] == 'Off'):
                 rd_led_state = 'off'
             self.hass_helper.set_entity_state('input_boolean.philips_mainboard_hot_water_led',rd_led_state)
-            #hass.states.set('input_boolean.philips_mainboard_hot_water_led',rd_led_state)
+
             #coffee
             rd_led_state ='on'
             if(self.protocol[5][int(hex(input[5]),0)] == 'Off'):
                 rd_led_state = 'off'
+            elif(self.protocol[5][int(hex(input[5]),0)] == 'Double'):
+                self.hass_helper.set_entity_state('input_boolean.philips_double_coffee_led','on')
+            else:
+                self.hass_helper.set_entity_state('input_boolean.philips_double_coffee_led','off')
             self.hass_helper.set_entity_state('input_boolean.philips_mainboard_coffee_led',rd_led_state)
-            #hass.states.set('input_boolean.philips_mainboard_coffee_led',rd_led_state)
+            
             #steam
             rd_led_state ='on'
             if(self.protocol[6][int(hex(input[6]),0)] == 'Off'):
                 rd_led_state = 'off'
             self.hass_helper.set_entity_state('input_boolean.philips_mainboard_steam_led',rd_led_state)
-            #hass.states.set('input_boolean.philips_mainboard_steam_led',rd_led_state)                 
+ 
+            #Water empty
+            rd_led_state ='No error'
+            if(self.protocol[14][int(hex(input[14]),0)] == 'Water empty'):
+                  rd_led_state = 'Water empty'
+            self.hass_helper.set_entity_state('input_select.philipps_water_empty_led',rd_led_state)
+            
+            #Error LED
+            #self.wasteWarningLEDStates = {0x00: 'No error', 0x07:'Waste full', 0x38:'Error active'}
+            self.hass_helper.set_entity_state('input_select.philipps_error_led',self.protocol[15][int(hex(input[15]),0)])
+            
+            #Cup Size
+            #self.sizeLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED', 0x07: 'TopLED'}
+            #elf.sizeAquaLEDStates = {0x00: 'Off', 0x07:'Show LED Group',0x38:'Aqua Clean Orange'}
+            if(self.protocol[11][int(hex(input[11]),0)] == 'Off'):
+                if(self.protocol[10][int(hex(input[10]),0)] == '1LED/Off'):
+                    self.hass_helper.set_entity_state('input_select.philips_cup_size_led','Off')
+            elif(self.protocol[11][int(hex(input[11]),0)] == 'Show LED Group'):
+                match self.protocol[10][int(hex(input[10]),0)]:
+                    case '1LED/Off': rd_led_state = '1'
+                    case '2LED': rd_led_state = '2'
+                    case '3LED': rd_led_state = '3'
+                    case 'TopLED': rd_led_state = 'TopLED'
+                    case _: rd_led_state = 'Off'
+                self.hass_helper.set_entity_state('input_select.philips_cup_size_led',rd_led_state)       
+            #Off: sizeLED = 1LED/Off + sizeAqua = Off 
+            #1LED: sizeLED = 1LED/Off + sizeAqua != Off
+            #2LED: sizeLED = 2LED + sizeAqua != Off
+            #3LED: sizeLED = 3LED + sizeAqua != Off
+            
+            #bean strength
+            #        self.beanLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED'}
+            #       self.beanLEDStatesCtrl = {0x07: 'Show LED Group', 0x38: 'Powder Selected', 0x00:'Off'}
+            if(self.protocol[9][int(hex(input[9]),0)] == 'Off'):
+                if(self.protocol[8][int(hex(input[8]),0)] == '1LED/Off'):
+                    self.hass_helper.set_entity_state('input_select.philips_bean_led','Off')
+            elif(self.protocol[9][int(hex(input[9]),0)] == 'Show LED Group'):
+                match self.protocol[8][int(hex(input[8]),0)]:
+                    case '1LED/Off': rd_led_state = '1'
+                    case '2LED': rd_led_state = '2'
+                    case '3LED': rd_led_state = '3'
+                    case _: rd_led_state = 'Off'
+                self.hass_helper.set_entity_state('input_select.philips_bean_led',rd_led_state)  
+            elif(self.protocol[9][int(hex(input[9]),0)] == 'Powder Selected'):
+                self.hass_helper.set_entity_state('input_select.philips_bean_led','Powder')
+                
+            
+            
+            """
+                   self.statesDrinkSelection = {0x00: 'Off', 0x03: 'Half Brightness', 0x07: 'Full Brightness', 0x38: 'Double', 0x3F:'Full Brightness'}
+        self.beanLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED'}
+        self.beanLEDStatesCtrl = {0x07: 'Show LED Group', 0x38: 'Powder Selected', 0x00:'Off'}
+        self.sizeLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED', 0x07: 'TopLED'}
+        self.sizeAquaLEDStates = {0x00: 'Off', 0x07:'Show LED Group',0x38:'Aqua Clean Orange'}
+        self.calcCleanLEDStates = {0x00: 'Both Off', 0x38:'Calc / Clean orange', 0x07:'unknown'}
+        self.emptyWaterLEDStates = {0x00: 'No error', 0x38:'Water empty'}
+        self.wasteWarningLEDStates = {0x00: 'No error', 0x07:'Waste full', 0x38:'Error active'}
+        self.playPauseLEDStates = {0x00:'Off', 0x07:'On'}
+        
+        #mainboard protocol (mainboard -> display)
+        self.protocol = {0:self.preAmbelStates, 1:self.preAmbelStates,3:self.statesDrinkSelection, 4:self.statesDrinkSelection, 5:self.statesDrinkSelection, 6:self.statesDrinkSelection, 8:self.beanLEDStates, 9:self.beanLEDStatesCtrl, 10:self.sizeLEDStates, 11:self.sizeAquaLEDStates, 12:self.calcCleanLEDStates, 14:self.emptyWaterLEDStates, 15:self.wasteWarningLEDStates, 16:self.playPauseLEDStates}
+        self.protocolNames = {0:'Pre_0',1:'Pre_1', 3:'Espresso LED', 4:'Hot Water LED', 5:'Coffe LED', 6:'Steam LED', 8:'Bean LED 0', 9:'Bean LED 1', 10:'Size LED', 11:'Size Aqua LED', 12:'Calc Clean', 14:'Water LED', 15:'Waste / Warning', 16:'Play LED'}
+            """
         except KeyError:
             print("key error")
         except Exception:
@@ -394,7 +463,7 @@ if __name__ == '__main__':
     try:
         #time.sleep(90)
         #Philips_2200 init method blocks the program until HAss is online
-        coffee = Philips_2200(token)
+        coffee = Philips_2200(token) #this call halts the program until HAss is available
         coffee_thread = Thread(target = coffee.run)
         wifi = Wifi_Deamon("192.168.2.1")
         wifi_thread = Thread(target=wifi.run)        
