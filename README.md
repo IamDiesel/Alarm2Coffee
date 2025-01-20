@@ -1,7 +1,8 @@
 # Power on your Philips 2200 Coffeemachine when your smartphone-alarm goes off - via Raspberry Pi and Home-Assistant #
 The following readme describes how to setup a raspberry pi / philips 2200 coffeemachine home assistant automation from scratch (incl. setting up home assistant on a Raspberry Pi5). Btw. thanks to https://github.com/TillFleisch/ESPHome-Philips-Smart-Coffee who gave me some inspiration / information on the coffee machine's UART-protocol.
 This project is also capable of displaying the current coffeemachine state and remotly operating the coffeemachine via a smartphone's home assistant app:
-![image](https://github.com/user-attachments/assets/e021abc0-e370-4a56-92f0-08992edfb9e1)
+![image](https://github.com/user-attachments/assets/db7b7070-5dab-4fe5-b921-18026534000e)
+
 
 
 ### Requirements: ###
@@ -136,9 +137,9 @@ dtoverlay=vc4-kms-dsi-7inch
 ## configure home assistant ##
 ### Create entities (German) ###
 Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
-![image](https://github.com/user-attachments/assets/92806d0c-d983-4e49-8316-0e5e1caac7e1)
-![image](https://github.com/user-attachments/assets/e3ebc246-aa10-4801-9fed-4610fc1dc235)
-![image](https://github.com/user-attachments/assets/12c1caa5-effe-4827-9b6d-f86677d2f4a4)
+![image](https://github.com/user-attachments/assets/c8b48b42-d767-49a4-8a26-b0aa1a9859a4)
+![image](https://github.com/user-attachments/assets/30226f08-7ac6-44d0-a3ce-733fa3fd6ebd)
+
 
 
 
@@ -279,140 +280,770 @@ Of course the path must be set to your local Philips_2200.py. In addition Wifi_R
 
 ~~~
 
-type: sections
-max_columns: 2
-title: Kaffee
-path: kaffee
-icon: mdi:coffee
-sections:
-  - type: grid
-    cards:
-      - type: heading
-        heading: Drink Selection
-        heading_style: title
-      - type: tile
-        entity: input_button.philips_display_espresso_btn
-        name: Espresso
-        show_entity_picture: true
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.philips_display_coffee_btn
-        name: Coffee
-        show_entity_picture: false
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.philips_display_hot_water_btn
-        name: Hot Water
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.philips_display_steam_btn
-        name: Steam
-        tap_action:
-          action: toggle
-      - type: heading
-        icon: ""
-        heading: Power
-        heading_style: subtitle
-      - type: tile
-        entity: input_button.philips_display_power_btn
-        name: Power On
-        icon_tap_action:
-          action: toggle
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.philips_display_power_off_btn
-        name: Power Off
-        tap_action:
-          action: toggle
-    column_span: 1
-  - type: grid
-    cards:
-      - type: heading
-        heading: Current Selection
-        heading_style: title
-      - type: tile
-        entity: input_boolean.philips_mainboard_espresso_led
-        name: Espresso
-        show_entity_picture: true
-        vertical: false
-        hide_state: false
-      - type: tile
-        entity: input_boolean.philips_mainboard_coffee_led
-        name: Coffee
-      - type: tile
-        entity: input_boolean.philips_mainboard_hot_water_led
-        name: Hot Water
-      - type: tile
-        entity: input_boolean.philips_mainboard_steam_led
-        name: Steam
-      - type: heading
-        icon: ""
-        heading: My Coffee Choice
-        heading_style: subtitle
-      - type: tile
-        entity: input_button.philips_display_bean_btn
-        name: Bean
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.philips_display_cup_btn
-        name: Cup Size
-        icon_tap_action:
-          action: toggle
-        tap_action:
-          action: toggle
-      - type: tile
-        entity: input_button.input_button_philips_display_play_btn
-        name: Start
-        color: green
-        tap_action:
-          action: toggle
-  - type: grid
-    cards:
-      - type: heading
-        heading_style: title
-        icon: mdi:alarm
-        badges:
-          - type: entity
+views:
+  - type: sections
+    max_columns: 2
+    title: Kaffee
+    path: kaffee
+    icon: mdi:coffee
+    sections:
+      - type: grid
+        cards:
+          - type: tile
+            entity: input_button.philips_display_power_btn
+            name: Power On
+            icon_tap_action:
+              action: toggle
+            tap_action:
+              action: toggle
+            hide_state: true
+          - type: tile
+            entity: input_button.philips_display_power_off_btn
+            name: Power Off
+            tap_action:
+              action: toggle
+            hide_state: true
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: perform-action
+              perform_action: automation.trigger
+              target:
+                entity_id: automation.philips_display_steam_event_helper
+              data:
+                skip_condition: true
+            entity: input_boolean.philips_mainboard_espresso_led
+            show_state: false
+            name: Espresso
+            icon: mdi:cup
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: perform-action
+              perform_action: automation.trigger
+              target:
+                entity_id: automation.philips_event_coffee_btn
+              data:
+                skip_condition: true
+            entity: input_boolean.philips_mainboard_coffee_led
+            show_state: false
+            name: Coffee
+            icon: mdi:coffee
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: perform-action
+              perform_action: automation.trigger
+              target:
+                entity_id: automation.philips_event_hot_water_btn
+              data:
+                skip_condition: true
+            entity: input_boolean.philips_mainboard_hot_water_led
+            show_state: false
+            name: Hot Water
+            icon: mdi:tea-outline
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: perform-action
+              perform_action: automation.trigger
+              target:
+                entity_id: automation.neue_automatisierung
+              data:
+                skip_condition: true
+            entity: input_boolean.philips_mainboard_steam_led
+            show_state: false
+            name: Steam
+            icon: mdi:weather-windy
+      - type: grid
+        cards:
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.input_button_philips_display_play_btn
+            grid_options:
+              columns: 12
+              rows: 2
+            name: Start
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_bean_led
+                state: '1'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_bean_btn
+              icon: mdi:network-strength-1
+              hold_action:
+                action: toggle
+              name: Strength
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_bean_led
+                state: '2'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_bean_btn
+              icon: mdi:network-strength-3
+              hold_action:
+                action: toggle
+              name: Strength
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_bean_led
+                state: '3'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_bean_btn
+              icon: mdi:network-strength-4
+              hold_action:
+                action: toggle
+              name: Strength
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_bean_led
+                state: 'Off'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_button.philips_display_bean_btn
+              icon: mdi:cancel
+              hold_action:
+                action: none
+              name: Strength
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_cup_size_led
+                state: '1'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_cup_btn
+              icon: mdi:network-strength-1
+              hold_action:
+                action: toggle
+              name: Size
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_cup_size_led
+                state: '2'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_cup_btn
+              icon: mdi:network-strength-3
+              hold_action:
+                action: toggle
+              name: Size
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_cup_size_led
+                state: '3'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: input_button.philips_display_cup_btn
+              icon: mdi:network-strength-4
+              hold_action:
+                action: toggle
+              name: Size
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philips_cup_size_led
+                state: 'Off'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_button.philips_display_cup_btn
+              icon: mdi:cancel
+              hold_action:
+                action: none
+              name: Size
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.philips_double_coffee_led
+                state: 'on'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_boolean.philips_double_coffee_led
+              name: Coffee
+              hold_action:
+                action: none
+              icon: mdi:dice-2
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_boolean.philips_double_espresso_led
+                state: 'on'
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_boolean.philips_double_coffee_led
+              name: Espresso
+              hold_action:
+                action: none
+              icon: mdi:dice-2
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philipps_water_empty_led
+                state: Water empty
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_select.philipps_water_empty_led
+              name: No Water
+              hold_action:
+                action: none
+              icon: mdi:water-off
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philipps_error_led
+                state: Waste full
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_boolean.philips_waste_helper_led
+              name: Waste full
+              hold_action:
+                action: none
+              icon: mdi:delete-variant
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: input_select.philipps_error_led
+                state: Error active
+            grid_options:
+              columns: 6
+              rows: 1
+            card:
+              show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: none
+              entity: input_boolean.philips_error_helper_led
+              name: Error
+              hold_action:
+                action: none
+              icon: mdi:alert-circle
+        column_span: 1
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            icon: mdi:alarm
+            badges:
+              - type: entity
+                entity: input_boolean.philips_alarm_daniel
+              - type: entity
+                entity: sensor.pixel_9_pro_next_alarm
+              - type: entity
+                show_state: true
+                show_icon: true
+                entity: input_boolean.philips_alarm_fox
+            heading: Mit Wecker einschalten
+          - type: tile
             entity: input_boolean.philips_alarm_daniel
-          - type: entity
+            tap_action:
+              action: toggle
+            name: Alarm2Coffee Daniel
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: tile
+            entity: input_boolean.philips_alarm_fox
+            tap_action:
+              action: toggle
+            name: Alarm2Coffee Fox
+            grid_options:
+              columns: 12
+              rows: 1
+          - type: tile
             entity: sensor.pixel_9_pro_next_alarm
+            grid_options:
+              columns: 12
+              rows: 2
+            name: Nächster Wecker Daniel
+            hide_state: false
+            show_entity_picture: false
+            vertical: true
+            state_content:
+              - state
+              - Local Time
+  - title: Fuchsbau Energieerzeugung
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Fuchsbau Energeerzeugung
           - type: entity
-            entity: input_boolean.philips_alarm_
-        heading: Mit Wecker einschalten
-      - type: tile
-        entity: input_boolean.philips_alarm_daniel
-        tap_action:
-          action: toggle
-        name: Alarm2Coffee Daniel
-        grid_options:
-          columns: 12
-          rows: 1
-      - type: tile
-        entity: input_boolean.philips_alarm_
-        tap_action:
-          action: toggle
-        name: Alarm2Coffee 
-        grid_options:
-          columns: 12
-          rows: 1
-      - type: tile
-        entity: sensor.pixel_9_pro_next_alarm
-        grid_options:
-          columns: 12
-          rows: 2
-        name: Nächster Wecker Daniel
-        hide_state: false
-        show_entity_picture: false
-        vertical: true
-        state_content:
-          - state
-          - Local Time
-    column_span: 2       
+            entity: sensor.energie_einspeisung
+            grid_options:
+              columns: 12
+              rows: 2
+          - graph: line
+            type: sensor
+            entity: sensor.smart_plugs_leistungsaufnahme
+            detail: 2
+            name: Smart Plugs Leistungsaufnahme
+            grid_options:
+              columns: 6
+              rows: 2
+            icon: mdi:home-lightning-bolt-outline
+          - graph: line
+            type: sensor
+            entity: sensor.powerstream_4932_inverter_output_watts
+            detail: 2
+            name: Einspeisung
+            grid_options:
+              columns: 6
+              rows: 2
+          - type: heading
+            heading: Wohnzimmer
+            heading_style: title
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.wohnzimmer_on
+            icon: mdi:television-classic
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: TV / AMP
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.wohnzimmer_lampe_on
+            icon: mdi:floor-lamp
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Stehlampe
+          - type: heading
+            icon: mdi:fridge
+            heading: Arbeitszimmer
+            heading_style: title
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.pc_daniel_on
+            icon: mdi:desktop-tower-monitor
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: PC
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.router_on
+            icon: mdi:router-wireless
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Router
+          - type: heading
+            icon: mdi:fridge
+            heading: Küche / Bad
+            heading_style: title
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.kuche_kaffee_on
+            icon: mdi:coffee
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Kaffee
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.bad_on
+            icon: mdi:bathtub
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Bad
+          - type: heading
+            icon: mdi:fridge
+            heading: Schlafzimmer
+            heading_style: title
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.tv_schlafzimmer_on
+            icon: mdi:television-classic
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: TV
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.bett_anne_on
+            icon: mdi:bed-outline
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Bett Anne
+          - show_name: true
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: switch.bett_daniel_on
+            icon: mdi:bed-outline
+            show_state: true
+            grid_options:
+              columns: 3
+              rows: 2
+            name: Bett Daniel
+      - type: grid
+        cards:
+          - chart_type: bar
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.powerstream_4932_inverter_output_watts
+            stat_types:
+              - mean
+            days_to_show: 1
+            title: Wechselrichter
+          - type: entities
+            entities:
+              - entity: sensor.powerstream_4932_status
+                name: Status
+              - entity: sensor.powerstream_4932_inverter_on_off_status
+                name: Inverter On/Off Status
+              - entity: sensor.powerstream_4932_solar_1_watts
+                name: Solar 1 Watts
+              - entity: sensor.powerstream_4932_solar_2_watts
+                name: Solar 2 Watts
+              - entity: sensor.powerstream_4932_battery_input_watts
+                name: Battery Input Watts
+              - entity: sensor.powerstream_4932_other_loads
+                name: Other Loads
+              - entity: sensor.powerstream_4932_rated_power
+                name: Rated Power
+            title: Power Stream Solar
+            state_color: false
+          - type: heading
+            heading_style: title
+            heading: Historie Fuchsbau Energieerzeugung
+          - chart_type: line
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.powerstream_4932_inverter_output_watts
+            stat_types:
+              - min
+              - max
+              - mean
+            title: Einspeisung
+          - chart_type: bar
+            period: hour
+            type: statistics-graph
+            entities:
+              - sensor.smart_plugs_leistungsaufnahme
+            stat_types:
+              - mean
+            days_to_show: 1
+            title: Wechselrichter
+    cards: []
+    type: sections
+    max_columns: 4
+    icon: mdi:solar-panel-large
+  - type: sections
+    max_columns: 4
+    title: Fernbedienung
+    path: fernbedienung
+    icon: mdi:remote-tv
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Viktoria
+            heading_style: title
+            icon: mdi:speaker
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.amp_on_off
+            name: On / Off
+            grid_options:
+              columns: 12
+              rows: 2
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.amp_source_last
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.amp_vol_down
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.amp_vol_up
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.amp_source_next
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - type: heading
+            icon: mdi:television-classic
+            heading: Ferdinand
+            heading_style: title
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_on_off
+            name: On / Off
+            grid_options:
+              columns: 12
+              rows: 2
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_back
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_up
+            name: On / Off
+            grid_options:
+              columns: 6
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_home
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_left
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 2
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_ok
+            name: On / Off
+            grid_options:
+              columns: 6
+              rows: 2
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_right
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 2
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_netflix
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_down
+            name: On / Off
+            grid_options:
+              columns: 6
+              rows: 1
+          - show_name: false
+            show_icon: true
+            type: button
+            tap_action:
+              action: toggle
+            entity: input_button.tv_source
+            name: On / Off
+            grid_options:
+              columns: 3
+              rows: 1
+  - type: panel
+    path: dobby
+    title: Dobby
+    icon: mdi:wizard-hat
+    cards:
+      - type: iframe
+        url: http://192.168.2.42/#/
+        aspect_ratio: 80÷
+
 ~~~
 
 # TODOs #
