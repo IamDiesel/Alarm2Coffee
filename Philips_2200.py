@@ -154,9 +154,12 @@ class Philips_2200(Thread):
         for i in range(self.cmd_rep):
             self.dev_display.write(cmd_select_cup_size)
             self.forward_mainboard_to_display_update_hass()
-    def power_on_no_clean_cmd_routine(self):
+    def power_on_cmd_routine(self, clean=True):
         cmd_beep = b'\xd5\x55\x0a\x00\x00\x03\x02\x00\x00\x00\x32\x25'
-        cmd_power_on = b'\xd5\x55\x01\x00\x00\x03\x02\x00\x00\x00\x19\x10'
+        if(clean):
+            cmd_power_on = b'\xd5\x55\x02\x01\x02\x00\x02\x00\x00\x00\x38\x15'
+        else:
+            cmd_power_on = b'\xd5\x55\x01\x00\x00\x03\x02\x00\x00\x00\x19\x10'
         cmd_select_nothing = 	b'\xd5\x55\x00\x00\x00\x03\x02\x00\x00\x00\x2d\x01'
         self.__relais_pwr_toggle(0.4)#0.485
         for i in range(23): #23 from recording
@@ -367,6 +370,7 @@ class Philips_2200(Thread):
         self.next_cmd = None
         try:
             power_action = self.hass_helper.get_entity_state('input_boolean.philips_display_power_btn_event')
+            power_action_nc = self.hass_helper.get_entity_state('input_boolean.philips_display_power_nc_btn_event')
             espresso_action = self.hass_helper.get_entity_state('input_boolean.philips_display_espresso_btn')
             coffee_action = self.hass_helper.get_entity_state('input_boolean.philips_display_coffee_btn_event')
             water_action = self.hass_helper.get_entity_state('input_boolean.philips_display_hot_water_btn_event')
@@ -393,8 +397,12 @@ class Philips_2200(Thread):
                 self.next_cmd = self.select_play_cmd_routine
             elif (power_action == 'on'):
                 self.hass_helper.set_entity_state('input_boolean.philips_display_power_btn_event', 'off')
-                self.next_cmd = self.power_on_no_clean_cmd_routine
+                self.next_cmd = self.power_on_cmd_routine
                 print("power on")
+            elif (power_action_nc == 'on'):
+                self.hass_helper.set_entity_state('input_boolean.philips_display_power_nc_btn_event', 'off')
+                self.next_cmd = lambda: self.power_on_cmd_routine(False)
+                print("power on - no cleaning")
             elif (cup_action == 'on'):
                 self.hass_helper.set_entity_state('input_boolean.philips_display_cup_btn_event', 'off')
                 self.next_cmd = self.select_cup_cmd_routine
@@ -468,8 +476,8 @@ if __name__ == '__main__':
         wifi = Wifi_Deamon("192.168.2.1")
         wifi_thread = Thread(target=wifi.run)        
         coffee_thread.start()
-        wifi_thread.start()
-        wifi_thread.join()
+        #wifi_thread.start()
+        #wifi_thread.join()
         coffee_thread.join()
     except Exception as e:
         print("Exception Main thread: ",e)
