@@ -1,7 +1,8 @@
 # Power on your Philips 2200 Coffeemachine when your smartphone-alarm goes off - via Raspberry Pi and Home-Assistant #
 The following readme describes how to setup a raspberry pi / philips 2200 coffeemachine home assistant automation from scratch (incl. setting up home assistant on a Raspberry Pi5). Btw. thanks to https://github.com/TillFleisch/ESPHome-Philips-Smart-Coffee who gave me some inspiration / information on the coffee machine's UART-protocol.
 This project is also capable of displaying the current coffeemachine state and remotly operating the coffeemachine via a smartphone's home assistant app:
-![image](https://github.com/user-attachments/assets/db7b7070-5dab-4fe5-b921-18026534000e)
+![image](https://github.com/user-attachments/assets/20d99c7c-06d6-48cf-98ce-ed4fbc08d367)
+
 
 
 
@@ -140,7 +141,9 @@ Create entities (Einstellungen -> Geräte und Dienste -> Helfer)
 ![image](https://github.com/user-attachments/assets/c8b48b42-d767-49a4-8a26-b0aa1a9859a4)
 ![image](https://github.com/user-attachments/assets/30226f08-7ac6-44d0-a3ce-733fa3fd6ebd)
 
-
+### Create Automations (German) ###
+![image](https://github.com/user-attachments/assets/d0950ce3-18f2-41fa-b561-7345fb45f931)
+![image](https://github.com/user-attachments/assets/64c87665-f6b4-4b69-912c-060af12bdc9e)
 
 
 ### setup alarm (Android) ###
