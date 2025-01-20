@@ -207,15 +207,6 @@ class Philips_2200(Thread):
             count_main_msg = 0
             print("Waiting for disp")
 
-
-    '''TODO implement cmd routines
-    -DONE power_off_no_clean_cmd_routine
-    -power_off_clean_cmd_routine
-    -power_on_clean_cmd_routine
-    -DONE select_bean_cmd_routine
-    -DONE select_cup_cmd_routine
-    '''
-
     class HASS_Helper:
         #helper for i/o from and to homeassistant
         def __init__(self, persistant_HASS_token):
@@ -306,12 +297,9 @@ class Philips_2200(Thread):
             self.hass_helper.set_entity_state('input_select.philipps_water_empty_led',rd_led_state)
             
             #Error LED
-            #self.wasteWarningLEDStates = {0x00: 'No error', 0x07:'Waste full', 0x38:'Error active'}
             self.hass_helper.set_entity_state('input_select.philipps_error_led',self.protocol[15][int(hex(input[15]),0)])
             
             #Cup Size
-            #self.sizeLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED', 0x07: 'TopLED'}
-            #elf.sizeAquaLEDStates = {0x00: 'Off', 0x07:'Show LED Group',0x38:'Aqua Clean Orange'}
             if(self.protocol[11][int(hex(input[11]),0)] == 'Off'):
                 if(self.protocol[10][int(hex(input[10]),0)] == '1LED/Off'):
                     self.hass_helper.set_entity_state('input_select.philips_cup_size_led','Off')
@@ -323,14 +311,8 @@ class Philips_2200(Thread):
                     case 'TopLED': rd_led_state = 'TopLED'
                     case _: rd_led_state = 'Off'
                 self.hass_helper.set_entity_state('input_select.philips_cup_size_led',rd_led_state)       
-            #Off: sizeLED = 1LED/Off + sizeAqua = Off 
-            #1LED: sizeLED = 1LED/Off + sizeAqua != Off
-            #2LED: sizeLED = 2LED + sizeAqua != Off
-            #3LED: sizeLED = 3LED + sizeAqua != Off
-            
-            #bean strength
-            #        self.beanLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED'}
-            #       self.beanLEDStatesCtrl = {0x07: 'Show LED Group', 0x38: 'Powder Selected', 0x00:'Off'}
+
+            #Bean / Coffee strength
             if(self.protocol[9][int(hex(input[9]),0)] == 'Off'):
                 if(self.protocol[8][int(hex(input[8]),0)] == '1LED/Off'):
                     self.hass_helper.set_entity_state('input_select.philips_bean_led','Off')
@@ -343,24 +325,7 @@ class Philips_2200(Thread):
                 self.hass_helper.set_entity_state('input_select.philips_bean_led',rd_led_state)  
             elif(self.protocol[9][int(hex(input[9]),0)] == 'Powder Selected'):
                 self.hass_helper.set_entity_state('input_select.philips_bean_led','Powder')
-                
-            
-            
-            """
-                   self.statesDrinkSelection = {0x00: 'Off', 0x03: 'Half Brightness', 0x07: 'Full Brightness', 0x38: 'Double', 0x3F:'Full Brightness'}
-        self.beanLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED'}
-        self.beanLEDStatesCtrl = {0x07: 'Show LED Group', 0x38: 'Powder Selected', 0x00:'Off'}
-        self.sizeLEDStates = {0x00:'1LED/Off', 0x38:'2LED', 0x3F:'3LED', 0x07: 'TopLED'}
-        self.sizeAquaLEDStates = {0x00: 'Off', 0x07:'Show LED Group',0x38:'Aqua Clean Orange'}
-        self.calcCleanLEDStates = {0x00: 'Both Off', 0x38:'Calc / Clean orange', 0x07:'unknown'}
-        self.emptyWaterLEDStates = {0x00: 'No error', 0x38:'Water empty'}
-        self.wasteWarningLEDStates = {0x00: 'No error', 0x07:'Waste full', 0x38:'Error active'}
-        self.playPauseLEDStates = {0x00:'Off', 0x07:'On'}
-        
-        #mainboard protocol (mainboard -> display)
-        self.protocol = {0:self.preAmbelStates, 1:self.preAmbelStates,3:self.statesDrinkSelection, 4:self.statesDrinkSelection, 5:self.statesDrinkSelection, 6:self.statesDrinkSelection, 8:self.beanLEDStates, 9:self.beanLEDStatesCtrl, 10:self.sizeLEDStates, 11:self.sizeAquaLEDStates, 12:self.calcCleanLEDStates, 14:self.emptyWaterLEDStates, 15:self.wasteWarningLEDStates, 16:self.playPauseLEDStates}
-        self.protocolNames = {0:'Pre_0',1:'Pre_1', 3:'Espresso LED', 4:'Hot Water LED', 5:'Coffe LED', 6:'Steam LED', 8:'Bean LED 0', 9:'Bean LED 1', 10:'Size LED', 11:'Size Aqua LED', 12:'Calc Clean', 14:'Water LED', 15:'Waste / Warning', 16:'Play LED'}
-            """
+
         except KeyError:
             print("key error")
         except Exception:
@@ -476,10 +441,17 @@ if __name__ == '__main__':
         wifi = Wifi_Deamon("192.168.2.1")
         wifi_thread = Thread(target=wifi.run)        
         coffee_thread.start()
-        #wifi_thread.start()
-        #wifi_thread.join()
+        wifi_thread.start()
+        wifi_thread.join()
         coffee_thread.join()
     except Exception as e:
         print("Exception Main thread: ",e)
         coffee.__relais_off()
 
+    '''TODO implement cmd routines
+    -DONE power_off_no_clean_cmd_routine
+    -power_off_clean_cmd_routine
+    -DONE power_on_clean_cmd_routine
+    -DONE select_bean_cmd_routine
+    -DONE select_cup_cmd_routine
+    '''
