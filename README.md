@@ -195,7 +195,8 @@ The state of the coffeemachine ist sent from the mainboard to the display. The b
 
 ## Display -> Mainboard
 
-![image](https://github.com/user-attachments/assets/b3d6cad4-577e-4da2-b39c-02a41aa92d71)
+![image](https://github.com/user-attachments/assets/3ca432a5-7275-4b2b-8659-d60b38e660b6)
+
 
 ### On / Off ###
 
