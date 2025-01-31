@@ -52,7 +52,7 @@ class Wifi_Deamon(Thread):
         return os.popen(input).read()
 
     def get_interface(self):
-        interface = "wlan0"
+        interface = "wlan1"
         res = self.shell_command("iwgetid")
         if("ESSID" in res):
             interface = res.split("     ")[0]
